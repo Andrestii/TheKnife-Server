@@ -1,6 +1,8 @@
 package com.theknife;
 
+import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.Socket;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
@@ -21,7 +23,6 @@ public class MenuServerController {
 
         database = new Database(hostDB, usernameDB, passwordDB);
         
-        /*
         try {
             ss = new ServerSocket(PORT);
             System.out.println("Server ready");
@@ -42,7 +43,7 @@ public class MenuServerController {
                 e.printStackTrace();
             }
         }
-       */
+       
     }
     
 
