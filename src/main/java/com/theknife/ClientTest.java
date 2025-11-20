@@ -1,14 +1,10 @@
 package com.theknife;
 
+import theknifeserver.*;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.Scanner;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.InetAddress;
-import java.net.Socket;
+import java.util.List;
 import java.util.Scanner;
 
 public class ClientTest {
@@ -17,159 +13,173 @@ public class ClientTest {
         InetAddress addr = InetAddress.getByName(null); // Localhost
         System.out.println("addr = " + addr);
         int port = 2345;
+
         Socket socket = new Socket(addr, port);
 
-try (
-    ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-    ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-    Scanner scanner = new Scanner(System.in)) {
+        try (
+                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+                Scanner scanner = new Scanner(System.in)
+        ) {
 
             String command = "";
+
             while (!command.equals("exit")) {
-                System.out.println("Enter command (register, login, searchRestaurant, addRestaurant, addReview, viewReviews, exit):");
+
+                System.out.println("\nComandi disponibili:");
+                System.out.println("registerUser, login, searchRestaurants, addRestaurant, getRestaurantDetails, addReview, viewReviews, exit");
                 command = scanner.nextLine();
 
+                out.writeObject(command); // invio comando
+
                 switch (command) {
-                    case "register":
-                        System.out.println("Enter first name:");
-                        String firstName = scanner.nextLine();
-                        System.out.println("Enter last name:");
-                        String lastName = scanner.nextLine();
-                        System.out.println("Enter username:");
-                        String username = scanner.nextLine();
-                        System.out.println("Enter password:");
-                        String password = scanner.nextLine();
-                        System.out.println("Enter role (cliente/ristoratore):");
-                        String role = scanner.nextLine();
 
-                        out.writeObject("register");
-                        out.writeObject(firstName);
-                        out.writeObject(lastName);
-                        out.writeObject(username);
-                        out.writeObject(password);
-                        out.writeObject(role);
+                    //REGISTER
+                    case "registerUser":
+                        System.out.println("Nome:");
+                        out.writeObject(scanner.nextLine());
 
-                        String response = (String) in.readObject();
-                        System.out.println("Server response: " + response);
+                        System.out.println("Cognome:");
+                        out.writeObject(scanner.nextLine());
+
+                        System.out.println("Username:");
+                        out.writeObject(scanner.nextLine());
+
+                        System.out.println("Password:");
+                        out.writeObject(scanner.nextLine());
+
+                        System.out.println("Ruolo (cliente/ristoratore):");
+                        out.writeObject(scanner.nextLine());
+
+                        System.out.println("Domicilio:");
+                        out.writeObject(scanner.nextLine());
                         break;
 
+                    //LOGIN
                     case "login":
-                        System.out.println("Enter username:");
-                        String user = scanner.nextLine();
-                        System.out.println("Enter password:");
-                        String pass = scanner.nextLine();
+                        System.out.println("Username:");
+                        out.writeObject(scanner.nextLine());
 
-                        out.writeObject("login");
-                        out.writeObject(user);
-                        out.writeObject(pass);
-
-                        boolean isValid = (boolean) in.readObject();
-                        System.out.println("Login result: " + isValid);
+                        System.out.println("Password:");
+                        out.writeObject(scanner.nextLine());
                         break;
 
-                    case "searchRestaurant":
-                        System.out.println("Enter location (city/country):");
-                        String location = scanner.nextLine();
-                        System.out.println("Enter cuisine type (optional):");
-                        String cuisine = scanner.nextLine();
+                    //SEARCH RESTAURANTS
 
-                        out.writeObject("searchRestaurant");
-                        out.writeObject(location);
-                        out.writeObject(cuisine);
-
-                        Object[] restaurants = (Object[]) in.readObject();
-                        System.out.println("Restaurants found:");
-                        for (Object r : restaurants) {
-                            System.out.println(r);
-                        }
+                    case "searchRestaurants":
+                        System.out.println("Inserisci filtro:");
+                        out.writeObject(scanner.nextLine());
                         break;
 
+                    //ADD RESTAURANT
                     case "addRestaurant":
-                        System.out.println("Enter restaurant name:");
-                        String rName = scanner.nextLine();
-                        System.out.println("Enter country:");
-                        String country = scanner.nextLine();
-                        System.out.println("Enter city:");
-                        String city = scanner.nextLine();
-                        System.out.println("Enter address:");
-                        String address = scanner.nextLine();
-                        System.out.println("Enter price range (e.g., 20-50):");
-                        String priceRange = scanner.nextLine();
-                        System.out.println("Delivery available? (yes/no):");
-                        String delivery = scanner.nextLine();
-                        System.out.println("Online booking available? (yes/no):");
-                        String booking = scanner.nextLine();
-                        System.out.println("Cuisine type:");
-                        String cType = scanner.nextLine();
+                        System.out.println("Owner username:");
+                        out.writeObject(scanner.nextLine());
 
-                        out.writeObject("addRestaurant");
-                        out.writeObject(rName);
-                        out.writeObject(country);
-                        out.writeObject(city);
-                        out.writeObject(address);
-                        out.writeObject(priceRange);
-                        out.writeObject(delivery);
-                        out.writeObject(booking);
-                        out.writeObject(cType);
+                        System.out.println("Nome ristorante:");
+                        out.writeObject(scanner.nextLine());
 
-                        response = (String) in.readObject();
-                        System.out.println("Server response: " + response);
+                        System.out.println("Nazione:");
+                        out.writeObject(scanner.nextLine());
+
+                        System.out.println("Città:");
+                        out.writeObject(scanner.nextLine());
+
+                        System.out.println("Indirizzo:");
+                        out.writeObject(scanner.nextLine());
+
+                        System.out.println("Latitudine (double):");
+                        out.writeObject(Double.parseDouble(scanner.nextLine()));
+
+                        System.out.println("Longitudine (double):");
+                        out.writeObject(Double.parseDouble(scanner.nextLine()));
+
+                        System.out.println("Prezzo medio:");
+                        out.writeObject(Integer.parseInt(scanner.nextLine()));
+
+                        System.out.println("Delivery (true/false):");
+                        out.writeObject(Boolean.parseBoolean(scanner.nextLine()));
+
+                        System.out.println("Prenotazione online (true/false):");
+                        out.writeObject(Boolean.parseBoolean(scanner.nextLine()));
+
+                        System.out.println("Tipo cucina:");
+                        out.writeObject(scanner.nextLine());
                         break;
 
+                    //GET RESTAURANT DETAILS
+                    case "getRestaurantDetails":
+                        System.out.println("ID ristorante:");
+                        out.writeObject(Integer.parseInt(scanner.nextLine()));
+                        break;
+
+                    //ADD REVIEW
                     case "addReview":
-                        System.out.println("Enter restaurant name:");
-                        String restName = scanner.nextLine();
-                        System.out.println("Enter rating (1-5):");
-                        int rating = scanner.nextInt();
-                        scanner.nextLine(); // consume newline
-                        System.out.println("Enter review text:");
-                        String reviewText = scanner.nextLine();
+                        System.out.println("ID ristorante:");
+                        out.writeObject(Integer.parseInt(scanner.nextLine()));
 
-                        out.writeObject("addReview");
-                        out.writeObject(restName);
-                        out.writeObject(rating);
-                        out.writeObject(reviewText);
+                        System.out.println("Username recensore:");
+                        out.writeObject(scanner.nextLine());
 
-                        response = (String) in.readObject();
-                        System.out.println("Server response: " + response);
+                        System.out.println("Stelle (1-5):");
+                        out.writeObject(Integer.parseInt(scanner.nextLine()));
+
+                        System.out.println("Testo recensione:");
+                        out.writeObject(scanner.nextLine());
                         break;
 
+                    //VIEW REVIEWS
                     case "viewReviews":
-                        System.out.println("Enter restaurant name:");
-                        String restView = scanner.nextLine();
-
-                        out.writeObject("viewReviews");
-                        out.writeObject(restView);
-
-                        Object[] reviews = (Object[]) in.readObject();
-                        System.out.println("Reviews:");
-                        for (Object rev : reviews) {
-                            System.out.println(rev);
-                        }
+                        System.out.println("ID ristorante:");
+                        out.writeObject(Integer.parseInt(scanner.nextLine()));
                         break;
 
                     case "exit":
-                        System.out.println("Exiting...");
-                        break;
+                        System.out.println("Uscita...");
+                        continue;
 
                     default:
-                        System.out.println("Unknown command.");
+                        System.out.println("Comando non riconosciuto.");
+                        continue;
                 }
+
+                //RICEZIONE RISPOSTA
+                ServerResponse response = (ServerResponse) in.readObject();
+
+                System.out.println("\n--- SERVER RESPONSE ---");
+                System.out.println("STATUS: " + response.getStatus());
+
+                Object payload = response.getPayload();
+
+                if (payload == null) {
+                    System.out.println("NO PAYLOAD");
+                }
+                else if (payload instanceof List<?>) {
+                    System.out.println("LISTA:");
+                    List<?> list = (List<?>) payload;
+                    for (Object item : list) {
+                        System.out.println(item);
+                    }
+                }
+                else {
+                    System.out.println("DATI:");
+                    System.out.println(payload);
+                }
+
+                System.out.println("-----------------------\n");
+
             }
 
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
         } finally {
-            socket.close(); // Ensure the socket is closed
+            socket.close();
         }
     }
 
     public static void main(String[] args) {
         try {
             new ClientTest().exec();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            e.getMessage();
         }
     }
 }

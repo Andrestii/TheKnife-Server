@@ -1,11 +1,9 @@
 package com.theknife;
 
+import theknifeserver.*;
 import java.io.*;
-import java.util.*;
 import java.net.Socket;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
+import java.util.List;
 
 public class ServerThread implements Runnable {
 
@@ -22,15 +20,16 @@ public class ServerThread implements Runnable {
         try (
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
                 ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                ) 
-            {
+        ) {
             while (true) {
+
                 String command = (String) in.readObject();
                 System.out.println("[SERVER] Ricevuto comando: " + command);
 
                 switch (command) {
-                    // UTENTI 
-                    case "registerUser":
+
+                    //  UTENTI
+                    case "registerUser": {
                         String nome = (String) in.readObject();
                         String cognome = (String) in.readObject();
                         String username = (String) in.readObject();
@@ -39,18 +38,29 @@ public class ServerThread implements Runnable {
                         String domicilio = (String) in.readObject();
 
                         boolean ok = database.registerUser(nome, cognome, username, password, ruolo, domicilio);
-                        out.writeObject(ok);
-                        break;
 
-                    case "login":
+                        if (ok)
+                            out.writeObject(new ServerResponse("OK", "Registrazione completata"));
+                        else
+                            out.writeObject(new ServerResponse("ERROR", "Errore nella registrazione"));
+                        break;
+                    }
+
+                    case "login": {
                         String user = (String) in.readObject();
                         String pass = (String) in.readObject();
-                        boolean isValid = database.validateUser(user, pass);
-                        out.writeObject(isValid);
-                        break;
 
-                    // RISTORANTI 
-                    case "addRestaurant":
+                        boolean isValid = database.validateUser(user, pass);
+
+                        if (isValid)
+                            out.writeObject(new ServerResponse("OK", new Utente(user, "?", "?")));
+                        else
+                            out.writeObject(new ServerResponse("ERROR", "Credenziali errate"));
+                        break;
+                    }
+
+                    //  RISTORANTI
+                    case "addRestaurant": {
                         String owner = (String) in.readObject();
                         String nomeRist = (String) in.readObject();
                         String nazione = (String) in.readObject();
@@ -63,88 +73,116 @@ public class ServerThread implements Runnable {
                         boolean prenotazione = (boolean) in.readObject();
                         String tipoCucina = (String) in.readObject();
 
-                        database.addRestaurant(owner, nomeRist, nazione, citta, indirizzo, lat, lon, prezzo, delivery, prenotazione, tipoCucina);
-                        out.writeObject("OK");
-                        break;
+                        database.addRestaurant(owner, nomeRist, nazione, citta, indirizzo,
+                                lat, lon, prezzo, delivery, prenotazione, tipoCucina);
 
-                    case "searchRestaurants":
-                        String ricerca = (String) in.readObject();
-                        ResultSet rs = database.searchRestaurants(ricerca);
-                        out.writeObject(database.resultSetToList(rs));
+                        out.writeObject(new ServerResponse("OK", "Ristorante aggiunto"));
                         break;
+                    }
 
-                    case "getRestaurantDetails":
-                        int idR = (int) in.readObject();
-                        out.writeObject(database.getRestaurantDetails(idR));
+                    case "searchRestaurants": {
+                        String filtro = (String) in.readObject();
+                        List<Ristorante> lista = database.searchRestaurants(filtro);
+
+                        out.writeObject(new ServerResponse("OK", lista));
                         break;
+                    }
 
-                    // RECENSIONI
-                    case "addReview":
+                    case "getRestaurantDetails": {
+                        int id = (int) in.readObject();
+                        Ristorante r = database.getRestaurantDetails(id);
+
+                        if (r != null)
+                            out.writeObject(new ServerResponse("OK", r));
+                        else
+                            out.writeObject(new ServerResponse("ERROR", "Ristorante non trovato"));
+
+                        break;
+                    }
+
+                    //  RECENSIONI
+                    case "addReview": {
                         int idRistorante = (int) in.readObject();
                         String recensore = (String) in.readObject();
                         int stelle = (int) in.readObject();
                         String testo = (String) in.readObject();
 
                         database.addReview(idRistorante, recensore, stelle, testo);
-                        out.writeObject("OK");
+                        out.writeObject(new ServerResponse("OK", "Recensione aggiunta"));
                         break;
+                    }
 
-                    case "editReview":
+                    case "editReview": {
                         int idRec = (int) in.readObject();
                         int nuoveStelle = (int) in.readObject();
                         String nuovoTesto = (String) in.readObject();
 
                         database.editReview(idRec, nuoveStelle, nuovoTesto);
-                        out.writeObject("OK");
+                        out.writeObject(new ServerResponse("OK", "Recensione modificata"));
                         break;
+                    }
 
-                    case "deleteReview":
-                        int idRecensione = (int) in.readObject();
-                        database.deleteReview(idRecensione);
-                        out.writeObject("OK");
+                    case "deleteReview": {
+                        int idRec = (int) in.readObject();
+                        database.deleteReview(idRec);
+                        out.writeObject(new ServerResponse("OK", "Recensione eliminata"));
                         break;
+                    }
 
-                    case "viewReviews":
-                        int idRist = (int) in.readObject();
-                        out.writeObject(database.getReviews(idRist));
+                    case "viewReviews": {
+                        int idR = (int) in.readObject();
+
+                        List<Recensione> recensioni = database.getReviews(idR);
+                        out.writeObject(new ServerResponse("OK", recensioni));
                         break;
+                    }
 
-                    case "answerReview":
-                        int idRev = (int) in.readObject();
+                    case "answerReview": {
+                        int idRec = (int) in.readObject();
                         String risposta = (String) in.readObject();
-                        database.answerReview(idRev, risposta);
-                        out.writeObject("OK");
-                        break;
 
-                    // PREFERITI
-                    case "addFavorite":
+                        database.answerReview(idRec, risposta);
+                        out.writeObject(new ServerResponse("OK", "Risposta salvata"));
+                        break;
+                    }
+
+                    //  PREFERITI
+                    case "addFavorite": {
                         String userFav = (String) in.readObject();
                         int idFav = (int) in.readObject();
+
                         database.addFavorite(userFav, idFav);
-                        out.writeObject("OK");
+                        out.writeObject(new ServerResponse("OK", "Aggiunto ai preferiti"));
                         break;
+                    }
 
-                    case "removeFavorite":
-                        String usr = (String) in.readObject();
+                    case "removeFavorite": {
+                        String userFav2 = (String) in.readObject();
                         int idRemove = (int) in.readObject();
-                        database.removeFavorite(usr, idRemove);
-                        out.writeObject("OK");
-                        break;
 
-                    case "listFavorites":
-                        String userF = (String) in.readObject();
-                        out.writeObject(database.listFavorites(userF));
+                        database.removeFavorite(userFav2, idRemove);
+                        out.writeObject(new ServerResponse("OK", "Rimosso dai preferiti"));
                         break;
+                    }
 
+                    case "listFavorites": {
+                        String userFav3 = (String) in.readObject();
+
+                        List<Ristorante> list = database.listFavorites(userFav3);
+                        out.writeObject(new ServerResponse("OK", list));
+                        break;
+                    }
+
+
+                    // DEFAULT
                     default:
-                        System.out.println("[SERVER] Comando sconosciuto");
-                        out.writeObject("ERROR");
+                        out.writeObject(new ServerResponse("ERROR", "Comando non riconosciuto"));
                 }
             }
 
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace(); //Stampa la traccia dello stack (l’errore completo) a console
-            System.out.println("[SERVER] Connessione chiusa: " + e.getMessage()); //restituisce una stringa con il messaggio dell’errore
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("[SERVER] Connessione chiusa: " + e.getMessage());
         }
     }
 }
