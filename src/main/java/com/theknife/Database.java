@@ -26,7 +26,6 @@ public class Database {
     }
 
     // UTENTI
-
     public boolean registerUser(String nome, String cognome, String username,
                                 String password, String ruolo, String domicilio) {
         try {
@@ -50,10 +49,11 @@ public class Database {
         }
     }
 
+
     public boolean validateUser(String username, String password) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "SELECT * FROM utenti WHERE username=? AND password=?"
+                    "SELECT 1 FROM utenti WHERE username=? AND password=?"
             );
             ps.setString(1, username);
             ps.setString(2, password);
@@ -68,15 +68,41 @@ public class Database {
         }
     }
 
-    // RISTORANTI
 
+    public Utente getUserData(String username) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                "SELECT nome, cognome, username, ruolo, domicilio FROM utenti WHERE username=?"
+            );
+            ps.setString(1, username);
+
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) return null;
+
+            return new Utente(
+                rs.getString("username"),
+                rs.getString("ruolo"),
+                rs.getString("domicilio"),
+                rs.getString("nome"),
+                rs.getString("cognome")
+            );
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore getUserData: " + e.getMessage());
+            return null;
+        }
+    }
+
+ 
+    // RISTORANTI
     public void addRestaurant(String owner, String nome, String nazione, String citta,
                               String indirizzo, double lat, double lon, int prezzo,
                               boolean delivery, boolean prenotazione, String tipoCucina) {
         try {
             PreparedStatement ps = connection.prepareStatement(
                     "INSERT INTO ristoranti(owner_username, nome, nazione, citta, indirizzo, lat, lon, prezzo, delivery, prenotazione, tipo_cucina) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
 
             ps.setString(1, owner);
@@ -99,31 +125,21 @@ public class Database {
         }
     }
 
+
     public List<Ristorante> searchRestaurants(String filtro) {
         List<Ristorante> lista = new ArrayList<>();
 
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "SELECT * FROM ristoranti WHERE LOWER(nome) LIKE LOWER(?) OR LOWER(citta) LIKE LOWER(?)"
+                "SELECT * FROM ristoranti WHERE LOWER(nome) LIKE LOWER(?) OR LOWER(citta) LIKE LOWER(?)"
             );
             ps.setString(1, "%" + filtro + "%");
             ps.setString(2, "%" + filtro + "%");
 
             ResultSet rs = ps.executeQuery();
+
             while (rs.next()) {
-                lista.add(new Ristorante(
-                        rs.getInt("id"),
-                        rs.getString("nome"),
-                        rs.getString("nazione"),
-                        rs.getString("citta"),
-                        rs.getString("indirizzo"),
-                        rs.getDouble("lat"),
-                        rs.getDouble("lon"),
-                        rs.getInt("prezzo"),
-                        rs.getBoolean("delivery"),
-                        rs.getBoolean("prenotazione"),
-                        rs.getString("tipo_cucina")
-                ));
+                lista.add(buildRestaurantFromResultSet(rs));
             }
 
         } catch (SQLException e) {
@@ -132,6 +148,50 @@ public class Database {
 
         return lista;
     }
+
+
+    public List<Ristorante> searchRestaurantsAdvanced(
+            String citta,
+            String tipoCucina,
+            Integer prezzoMin,
+            Integer prezzoMax,
+            Boolean delivery,
+            Boolean prenotazione
+        ) {
+
+        List<Ristorante> lista = new ArrayList<>();
+        String query = "SELECT * FROM ristoranti WHERE 1=1 ";
+
+        if (citta != null) query += " AND LOWER(citta) = LOWER(?) ";
+        if (tipoCucina != null) query += " AND LOWER(tipo_cucina) = LOWER(?) ";
+        if (prezzoMin != null) query += " AND prezzo >= ? ";
+        if (prezzoMax != null) query += " AND prezzo <= ? ";
+        if (delivery != null) query += " AND delivery = ? ";
+        if (prenotazione != null) query += " AND prenotazione = ? ";
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(query);
+            int idx = 1;
+
+            if (citta != null) ps.setString(idx++, citta);
+            if (tipoCucina != null) ps.setString(idx++, tipoCucina);
+            if (prezzoMin != null) ps.setInt(idx++, prezzoMin);
+            if (prezzoMax != null) ps.setInt(idx++, prezzoMax);
+            if (delivery != null) ps.setBoolean(idx++, delivery);
+            if (prenotazione != null) ps.setBoolean(idx++, prenotazione);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) lista.add(buildRestaurantFromResultSet(rs));
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore searchRestaurantsAdvanced: " + e.getMessage());
+        }
+
+        return lista;
+    }
+
 
     public Ristorante getRestaurantDetails(int id) {
         try {
@@ -143,19 +203,7 @@ public class Database {
             ResultSet rs = ps.executeQuery();
             if (!rs.next()) return null;
 
-            return new Ristorante(
-                    rs.getInt("id"),
-                    rs.getString("nome"),
-                    rs.getString("nazione"),
-                    rs.getString("citta"),
-                    rs.getString("indirizzo"),
-                    rs.getDouble("lat"),
-                    rs.getDouble("lon"),
-                    rs.getInt("prezzo"),
-                    rs.getBoolean("delivery"),
-                    rs.getBoolean("prenotazione"),
-                    rs.getString("tipo_cucina")
-            );
+            return buildRestaurantFromResultSet(rs);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -163,13 +211,70 @@ public class Database {
         }
     }
 
-    // RECENSIONI
 
+    private Ristorante buildRestaurantFromResultSet(ResultSet rs) throws SQLException {
+        return new Ristorante(
+            rs.getInt("id"),
+            rs.getString("nome"),
+            rs.getString("nazione"),
+            rs.getString("citta"),
+            rs.getString("indirizzo"),
+            rs.getDouble("lat"),
+            rs.getDouble("lon"),
+            rs.getInt("prezzo"),
+            rs.getBoolean("delivery"),
+            rs.getBoolean("prenotazione"),
+            rs.getString("tipo_cucina"),
+            rs.getString("owner_username")
+        );
+    }
+
+   
+    // CONTROLLI DI PERMESSO
+    public boolean isOwnerOfRestaurant(String username, int idRistorante) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                "SELECT 1 FROM ristoranti WHERE id=? AND owner_username=?"
+            );
+            ps.setInt(1, idRistorante);
+            ps.setString(2, username);
+
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore isOwnerOfRestaurant: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean hasUserAlreadyReviewed(String username, int idRistorante) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                "SELECT 1 FROM recensioni WHERE username=? AND id_ristorante=?"
+            );
+            ps.setString(1, username);
+            ps.setInt(2, idRistorante);
+
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore hasUserAlreadyReviewed: " + e.getMessage());
+            return false;
+        }
+    }
+
+
+    // RECENSIONI
     public void addReview(int idRistorante, String username, int stelle, String testo) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO recensioni(id_ristorante, username, stelle, testo) VALUES (?, ?, ?, ?)"
+                "INSERT INTO recensioni(id_ristorante, username, stelle, testo) VALUES (?, ?, ?, ?)"
             );
+
             ps.setInt(1, idRistorante);
             ps.setString(2, username);
             ps.setInt(3, stelle);
@@ -183,10 +288,11 @@ public class Database {
         }
     }
 
+
     public void editReview(int idRecensione, int stelle, String testo) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "UPDATE recensioni SET stelle=?, testo=? WHERE id=?"
+                "UPDATE recensioni SET stelle=?, testo=? WHERE id=?"
             );
             ps.setInt(1, stelle);
             ps.setString(2, testo);
@@ -200,10 +306,11 @@ public class Database {
         }
     }
 
+
     public void deleteReview(int id) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "DELETE FROM recensioni WHERE id=?"
+                "DELETE FROM recensioni WHERE id=?"
             );
             ps.setInt(1, id);
             ps.executeUpdate();
@@ -214,38 +321,73 @@ public class Database {
         }
     }
 
+
     public List<Recensione> getReviews(int idRistorante) {
-    List<Recensione> lista = new ArrayList<>();
+        List<Recensione> lista = new ArrayList<>();
 
-    try {
-        PreparedStatement ps = connection.prepareStatement(
+        try {
+            PreparedStatement ps = connection.prepareStatement(
                 "SELECT * FROM recensioni WHERE id_ristorante=?"
-        );
-        ps.setInt(1, idRistorante);
+            );
+            ps.setInt(1, idRistorante);
 
-        ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery();
 
-        while (rs.next()) {
-            lista.add(new Recensione(
+            while (rs.next()) {
+                lista.add(new Recensione(
                     rs.getInt("id"),
                     rs.getString("username"),
                     rs.getInt("stelle"),
                     rs.getString("testo"),
                     rs.getString("risposta")
-            ));
+                ));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
 
-    } catch (SQLException e) {
-        e.printStackTrace();
+        return lista;
     }
 
-    return lista;
-}
+
+    public List<Recensione> getReviewsForOwner(String ownerUsername) {
+        List<Recensione> lista = new ArrayList<>();
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                "SELECT rec.id, rec.username, rec.stelle, rec.testo, rec.risposta " +
+                "FROM recensioni rec " +
+                "JOIN ristoranti r ON r.id = rec.id_ristorante " +
+                "WHERE r.owner_username=?"
+            );
+            ps.setString(1, ownerUsername);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                lista.add(new Recensione(
+                    rs.getInt("id"),
+                    rs.getString("username"),
+                    rs.getInt("stelle"),
+                    rs.getString("testo"),
+                    rs.getString("risposta")
+                ));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore getReviewsForOwner: " + e.getMessage());
+        }
+
+        return lista;
+    }
+
 
     public void answerReview(int idRecensione, String risposta) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "UPDATE recensioni SET risposta=? WHERE id=?"
+                "UPDATE recensioni SET risposta=? WHERE id=?"
             );
             ps.setString(1, risposta);
             ps.setInt(2, idRecensione);
@@ -259,16 +401,38 @@ public class Database {
     }
 
 
-    // PREFERITI
+    // RIEPILOGO RISTORATORE
+    public List<HashMap<String, Object>> getRestaurantSummary(String ownerUsername) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                "SELECT r.id, r.nome, " +
+                "       COALESCE(AVG(rec.stelle),0) AS media_stelle, " +
+                "       COUNT(rec.id) AS num_recensioni " +
+                "FROM ristoranti r " +
+                "LEFT JOIN recensioni rec ON rec.id_ristorante = r.id " +
+                "WHERE r.owner_username=? " +
+                "GROUP BY r.id"
+            );
 
+            ps.setString(1, ownerUsername);
+            ResultSet rs = ps.executeQuery();
+            return resultSetToList(rs);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore getRestaurantSummary: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    // PREFERITI
     public void addFavorite(String username, int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO preferiti(username, id_ristorante) VALUES (?, ?)"
+                "INSERT INTO preferiti(username, id_ristorante) VALUES (?, ?)"
             );
             ps.setString(1, username);
             ps.setInt(2, idRistorante);
-
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -277,14 +441,14 @@ public class Database {
         }
     }
 
+
     public void removeFavorite(String username, int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "DELETE FROM preferiti WHERE username=? AND id_ristorante=?"
+                "DELETE FROM preferiti WHERE username=? AND id_ristorante=?"
             );
             ps.setString(1, username);
             ps.setInt(2, idRistorante);
-
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -293,31 +457,19 @@ public class Database {
         }
     }
 
+
     public List<Ristorante> listFavorites(String username) {
         List<Ristorante> lista = new ArrayList<>();
 
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "SELECT r.* FROM preferiti p JOIN ristoranti r ON p.id_ristorante=r.id WHERE p.username=?"
+                "SELECT r.* FROM preferiti p JOIN ristoranti r ON p.id_ristorante=r.id WHERE p.username=?"
             );
             ps.setString(1, username);
 
             ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                lista.add(new Ristorante(
-                        rs.getInt("id"),
-                        rs.getString("nome"),
-                        rs.getString("nazione"),
-                        rs.getString("citta"),
-                        rs.getString("indirizzo"),
-                        rs.getDouble("lat"),
-                        rs.getDouble("lon"),
-                        rs.getInt("prezzo"),
-                        rs.getBoolean("delivery"),
-                        rs.getBoolean("prenotazione"),
-                        rs.getString("tipo_cucina")
-                ));
-            }
+
+            while (rs.next()) lista.add(buildRestaurantFromResultSet(rs));
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -326,12 +478,10 @@ public class Database {
         return lista;
     }
 
-
     // UTILITY
-
-    /** Converte un ResultSet in una lista di HashMap per inviarlo facilmente al client */
     public List<HashMap<String, Object>> resultSetToList(ResultSet rs) {
         List<HashMap<String, Object>> list = new ArrayList<>();
+
         try {
             while (rs.next()) {
                 HashMap<String, Object> row = new HashMap<>();
@@ -344,10 +494,12 @@ public class Database {
 
                 list.add(row);
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("[DB] Errore resultSetToList: " + e.getMessage());
         }
+
         return list;
     }
 }

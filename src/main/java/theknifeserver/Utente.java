@@ -8,11 +8,15 @@ public class Utente implements Serializable {
     private String username;
     private String ruolo;
     private String domicilio;
+    private String nome;
+    private String cognome;
 
-    public Utente(String username, String ruolo, String domicilio) {
+    public Utente(String username, String ruolo, String domicilio, String nome, String cognome) {
         this.username = username;
         this.ruolo = ruolo;
         this.domicilio = domicilio;
+        this.nome = nome;
+        this.cognome = cognome;
     }
 
     public String getUsername() {
@@ -27,8 +31,16 @@ public class Utente implements Serializable {
         return domicilio;
     }
 
+    public String getNome() {
+        return nome;
+    }
+
+    public String getCognome() {
+        return cognome;
+    }
+
     @Override
     public String toString() {
-        return username + " (" + ruolo + ")";
+        return nome + " " + cognome + " (" + ruolo + ")";
     }
 }

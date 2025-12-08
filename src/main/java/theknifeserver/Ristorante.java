@@ -16,10 +16,12 @@ public class Ristorante implements Serializable {
     private boolean delivery;
     private boolean prenotazione;
     private String tipoCucina;
+    private String ownerUsername; 
 
     public Ristorante(int id, String nome, String nazione, String citta, String indirizzo,
-                         double lat, double lon, int prezzo,
-                         boolean delivery, boolean prenotazione, String tipoCucina) {
+                      double lat, double lon, int prezzo,
+                      boolean delivery, boolean prenotazione, String tipoCucina,
+                      String ownerUsername) {
 
         this.id = id;
         this.nome = nome;
@@ -32,6 +34,7 @@ public class Ristorante implements Serializable {
         this.delivery = delivery;
         this.prenotazione = prenotazione;
         this.tipoCucina = tipoCucina;
+        this.ownerUsername = ownerUsername;
     }
 
     public int getId() {
@@ -76,6 +79,10 @@ public class Ristorante implements Serializable {
 
     public String getTipoCucina() {
         return tipoCucina;
+    }
+
+    public String getOwnerUsername() {
+        return ownerUsername;
     }
 
     @Override
