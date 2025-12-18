@@ -1,10 +1,18 @@
 package com.theknife;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import theknifeserver.*;
+
+import theknifeserver.Recensione;
+import theknifeserver.Ristorante;
+import theknifeserver.Utente;
 
 public class Database {
 
@@ -72,7 +80,7 @@ public class Database {
     public Utente getUserData(String username) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "SELECT nome, cognome, username, ruolo, domicilio FROM utenti WHERE username=?"
+                "SELECT nome, cognome, username, ruolo, domicilio FROM utenti WHERE id=?"
             );
             ps.setString(1, username);
 
@@ -94,18 +102,18 @@ public class Database {
         }
     }
 
- 
+
     // RISTORANTI
-    public void addRestaurant(String owner, String nome, String nazione, String citta,
-                              String indirizzo, double lat, double lon, int prezzo,
-                              boolean delivery, boolean prenotazione, String tipoCucina) {
+    public void addRestaurant(int id_ristoratore, String nome, String nazione, String citta,
+                            String indirizzo, double lat, double lon, int prezzo,
+                            boolean delivery, boolean prenotazione, String tipoCucina) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO ristoranti(owner_username, nome, nazione, citta, indirizzo, lat, lon, prezzo, delivery, prenotazione, tipo_cucina) " +
+                    "INSERT INTO ristoranti(id_ristoratore, nome, nazione, citta, indirizzo, latitudine, longitudine, fascia_prezzo, delivery, prenotazione, tipo_cucina) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
 
-            ps.setString(1, owner);
+            ps.setInt(1, id_ristoratore);
             ps.setString(2, nome);
             ps.setString(3, nazione);
             ps.setString(4, citta);
@@ -164,8 +172,8 @@ public class Database {
 
         if (citta != null) query += " AND LOWER(citta) = LOWER(?) ";
         if (tipoCucina != null) query += " AND LOWER(tipo_cucina) = LOWER(?) ";
-        if (prezzoMin != null) query += " AND prezzo >= ? ";
-        if (prezzoMax != null) query += " AND prezzo <= ? ";
+        if (prezzoMin != null) query += " AND fascia_prezzo >= ? ";
+        if (prezzoMax != null) query += " AND fascia_prezzo <= ? ";
         if (delivery != null) query += " AND delivery = ? ";
         if (prenotazione != null) query += " AND prenotazione = ? ";
 
@@ -219,22 +227,22 @@ public class Database {
             rs.getString("nazione"),
             rs.getString("citta"),
             rs.getString("indirizzo"),
-            rs.getDouble("lat"),
-            rs.getDouble("lon"),
-            rs.getInt("prezzo"),
+            rs.getDouble("latitudine"),
+            rs.getDouble("longitudine"),
+            rs.getInt("fascia_prezzo"),
             rs.getBoolean("delivery"),
             rs.getBoolean("prenotazione"),
             rs.getString("tipo_cucina"),
-            rs.getString("owner_username")
+            rs.getString("id_ristoratore")
         );
     }
 
-   
+
     // CONTROLLI DI PERMESSO
     public boolean isOwnerOfRestaurant(String username, int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "SELECT 1 FROM ristoranti WHERE id=? AND owner_username=?"
+                "SELECT 1 FROM ristoranti WHERE id=? AND id_ristoratore=?"
             );
             ps.setInt(1, idRistorante);
             ps.setString(2, username);
@@ -249,12 +257,12 @@ public class Database {
         }
     }
 
-    public boolean hasUserAlreadyReviewed(String username, int idRistorante) {
+    public boolean hasUserAlreadyReviewed(int idRecensore, int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "SELECT 1 FROM recensioni WHERE username=? AND id_ristorante=?"
+                "SELECT 1 FROM recensioni WHERE id_recensore=? AND id_ristorante=?"
             );
-            ps.setString(1, username);
+            ps.setInt(1, idRecensore);
             ps.setInt(2, idRistorante);
 
             ResultSet rs = ps.executeQuery();
@@ -269,14 +277,14 @@ public class Database {
 
 
     // RECENSIONI
-    public void addReview(int idRistorante, String username, int stelle, String testo) {
+    public void addReview(int idRistorante, int idRecensore, int stelle, String testo) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO recensioni(id_ristorante, username, stelle, testo) VALUES (?, ?, ?, ?)"
+                "INSERT INTO recensioni(id_ristorante, id_utente, stelle, testo) VALUES (?, ?, ?, ?)"
             );
 
             ps.setInt(1, idRistorante);
-            ps.setString(2, username);
+            ps.setInt(2, idRecensore);
             ps.setInt(3, stelle);
             ps.setString(4, testo);
 
@@ -336,7 +344,7 @@ public class Database {
             while (rs.next()) {
                 lista.add(new Recensione(
                     rs.getInt("id"),
-                    rs.getString("username"),
+                    rs.getInt("id_utente"),
                     rs.getInt("stelle"),
                     rs.getString("testo"),
                     rs.getString("risposta")
@@ -351,24 +359,24 @@ public class Database {
     }
 
 
-    public List<Recensione> getReviewsForOwner(String ownerUsername) {
+    public List<Recensione> getReviewsForOwner(int ownerId) {
         List<Recensione> lista = new ArrayList<>();
 
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "SELECT rec.id, rec.username, rec.stelle, rec.testo, rec.risposta " +
+                "SELECT rec.id, rec.id_utente, rec.stelle, rec.testo, rec.risposta " +
                 "FROM recensioni rec " +
                 "JOIN ristoranti r ON r.id = rec.id_ristorante " +
-                "WHERE r.owner_username=?"
+                "WHERE r.id_ristoratore=?"
             );
-            ps.setString(1, ownerUsername);
+            ps.setInt(1, ownerId);
 
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
                 lista.add(new Recensione(
                     rs.getInt("id"),
-                    rs.getString("username"),
+                    rs.getInt("id_utente"),
                     rs.getInt("stelle"),
                     rs.getString("testo"),
                     rs.getString("risposta")
@@ -402,7 +410,7 @@ public class Database {
 
 
     // RIEPILOGO RISTORATORE
-    public List<HashMap<String, Object>> getRestaurantSummary(String ownerUsername) {
+    public List<HashMap<String, Object>> getRestaurantSummary(int ownerId) {
         try {
             PreparedStatement ps = connection.prepareStatement(
                 "SELECT r.id, r.nome, " +
@@ -410,11 +418,11 @@ public class Database {
                 "       COUNT(rec.id) AS num_recensioni " +
                 "FROM ristoranti r " +
                 "LEFT JOIN recensioni rec ON rec.id_ristorante = r.id " +
-                "WHERE r.owner_username=? " +
+                "WHERE r.id_ristoratore=? " +
                 "GROUP BY r.id"
             );
 
-            ps.setString(1, ownerUsername);
+            ps.setInt(1, ownerId);
             ResultSet rs = ps.executeQuery();
             return resultSetToList(rs);
 
@@ -426,12 +434,12 @@ public class Database {
     }
 
     // PREFERITI
-    public void addFavorite(String username, int idRistorante) {
+    public void addFavorite(int idUtente, int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO preferiti(username, id_ristorante) VALUES (?, ?)"
+                "INSERT INTO preferiti(id_utente, id_ristorante) VALUES (?, ?)"
             );
-            ps.setString(1, username);
+            ps.setInt(1, idUtente);
             ps.setInt(2, idRistorante);
             ps.executeUpdate();
 
@@ -442,12 +450,12 @@ public class Database {
     }
 
 
-    public void removeFavorite(String username, int idRistorante) {
+    public void removeFavorite(int idUtente, int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "DELETE FROM preferiti WHERE username=? AND id_ristorante=?"
+                "DELETE FROM preferiti WHERE id_utente=? AND id_ristorante=?"
             );
-            ps.setString(1, username);
+            ps.setInt(1, idUtente);
             ps.setInt(2, idRistorante);
             ps.executeUpdate();
 
@@ -458,14 +466,14 @@ public class Database {
     }
 
 
-    public List<Ristorante> listFavorites(String username) {
+    public List<Ristorante> listFavorites(int idUtente) {
         List<Ristorante> lista = new ArrayList<>();
 
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "SELECT r.* FROM preferiti p JOIN ristoranti r ON p.id_ristorante=r.id WHERE p.username=?"
+                "SELECT r.* FROM preferiti p JOIN ristoranti r ON p.id_ristorante=r.id WHERE p.id_utente=?"
             );
-            ps.setString(1, username);
+            ps.setInt(1, idUtente);
 
             ResultSet rs = ps.executeQuery();
 

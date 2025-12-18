@@ -1,9 +1,14 @@
 package com.theknife;
 
-import theknifeserver.*;
-import java.io.*;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.List;
+
+import theknifeserver.Recensione;
+import theknifeserver.Ristorante;
+import theknifeserver.ServerResponse;
+import theknifeserver.Utente;
 
 public class ServerThread implements Runnable {
 
@@ -69,7 +74,7 @@ public class ServerThread implements Runnable {
                     // RISTORANTI
                     
                     case "addRestaurant": {
-                        String owner = (String) in.readObject();
+                        int id_ristoratore = (int) in.readObject();
                         String nomeRist = (String) in.readObject();
                         String nazione = (String) in.readObject();
                         String citta = (String) in.readObject();
@@ -81,7 +86,7 @@ public class ServerThread implements Runnable {
                         boolean prenotazione = (boolean) in.readObject();
                         String tipoCucina = (String) in.readObject();
 
-                        database.addRestaurant(owner, nomeRist, nazione, citta, indirizzo,
+                        database.addRestaurant(id_ristoratore, nomeRist, nazione, citta, indirizzo,
                                 lat, lon, prezzo, delivery, prenotazione, tipoCucina);
 
                         out.writeObject(new ServerResponse("OK", "Ristorante aggiunto"));
@@ -130,34 +135,34 @@ public class ServerThread implements Runnable {
                     
                     case "addReview": {
                         int idRistorante = (int) in.readObject();
-                        String recensore = (String) in.readObject();
+                        int idRecensore = (int) in.readObject();
                         int stelle = (int) in.readObject();
                         String testo = (String) in.readObject();
 
                         // controllo: esiste già una recensione di questo utente?
-                        if (database.hasUserAlreadyReviewed(recensore, idRistorante)) {
+                        if (database.hasUserAlreadyReviewed(idRecensore, idRistorante)) {
                             out.writeObject(new ServerResponse("ERROR",
                                     "Hai già recensito questo ristorante"));
                             break;
                         }
 
-                        database.addReview(idRistorante, recensore, stelle, testo);
+                        database.addReview(idRistorante, idRecensore, stelle, testo);
                         out.writeObject(new ServerResponse("OK", "Recensione aggiunta"));
                         break;
                     }
 
                     case "editReview": {
                         int idRec = (int) in.readObject();
-                        String username = (String) in.readObject();
+                        int idUtente = (int) in.readObject();
                         int nuoveStelle = (int) in.readObject();
                         String nuovoTesto = (String) in.readObject();
 
                         // controllo autore → NON può modificare rec altrui
-                        List<Recensione> recensioni = database.getReviewsForOwner(username);
+                        List<Recensione> recensioni = database.getReviewsForOwner(idUtente);
                         boolean isAuthor = false;
 
                         for (Recensione r : recensioni) {
-                            if (r.getId() == idRec && r.getUsername().equals(username)) {
+                            if (r.getId() == idRec && r.getIdUtente() == idUtente) {
                                 isAuthor = true;
                                 break;
                             }
@@ -175,14 +180,14 @@ public class ServerThread implements Runnable {
 
                     case "deleteReview": {
                         int idRec = (int) in.readObject();
-                        String username = (String) in.readObject();
+                        int idUtente = (int) in.readObject();
 
-                        // controllo autore
-                        List<Recensione> recensioni = database.getReviewsForOwner(username);
+                        // controllo se l'autore e' il ristoratore
+                        List<Recensione> recensioni = database.getReviewsForOwner(idUtente);
                         boolean isAuthor = false;
 
                         for (Recensione r : recensioni) {
-                            if (r.getId() == idRec && r.getUsername().equals(username)) {
+                            if (r.getId() == idRec && r.getIdUtente() == idUtente) {
                                 isAuthor = true;
                                 break;
                             }
@@ -225,16 +230,16 @@ public class ServerThread implements Runnable {
                     }
 
                     case "getReviewsForOwner": {
-                        String owner = (String) in.readObject();
-                        List<Recensione> lista = database.getReviewsForOwner(owner);
+                        int idRistoratore = (int) in.readObject();
+                        List<Recensione> lista = database.getReviewsForOwner(idRistoratore);
 
                         out.writeObject(new ServerResponse("OK", lista));
                         break;
                     }
 
                     case "getRestaurantSummary": {
-                        String owner = (String) in.readObject();
-                        List<?> summary = database.getRestaurantSummary(owner);
+                        int idRistoratore = (int) in.readObject();
+                        List<?> summary = database.getRestaurantSummary(idRistoratore);
 
                         out.writeObject(new ServerResponse("OK", summary));
                         break;
@@ -245,26 +250,26 @@ public class ServerThread implements Runnable {
                     // PREFERITI
                     
                     case "addFavorite": {
-                        String userFav = (String) in.readObject();
+                        int idUser = (int) in.readObject();
                         int idFav = (int) in.readObject();
 
-                        database.addFavorite(userFav, idFav);
+                        database.addFavorite(idUser, idFav);
                         out.writeObject(new ServerResponse("OK", "Aggiunto ai preferiti"));
                         break;
                     }
 
                     case "removeFavorite": {
-                        String userFav2 = (String) in.readObject();
-                        int idRemove = (int) in.readObject();
+                        int idUser = (int) in.readObject();
+                        int idFav = (int) in.readObject();
 
-                        database.removeFavorite(userFav2, idRemove);
+                        database.removeFavorite(idUser, idFav);
                         out.writeObject(new ServerResponse("OK", "Rimosso dai preferiti"));
                         break;
                     }
 
                     case "listFavorites": {
-                        String userFav3 = (String) in.readObject();
-                        List<Ristorante> list = database.listFavorites(userFav3);
+                        int idUser = (int) in.readObject();
+                        List<Ristorante> list = database.listFavorites(idUser);
 
                         out.writeObject(new ServerResponse("OK", list));
                         break;

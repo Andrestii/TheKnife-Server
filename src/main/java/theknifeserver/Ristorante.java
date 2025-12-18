@@ -10,31 +10,31 @@ public class Ristorante implements Serializable {
     private String nazione;
     private String citta;
     private String indirizzo;
-    private double lat;
-    private double lon;
-    private int prezzo;
+    private double latitudine;
+    private double longitudine;
+    private int fasciaPrezzo;
     private boolean delivery;
     private boolean prenotazione;
     private String tipoCucina;
-    private String ownerUsername; 
+    private String idRistoratore; 
 
     public Ristorante(int id, String nome, String nazione, String citta, String indirizzo,
-                      double lat, double lon, int prezzo,
-                      boolean delivery, boolean prenotazione, String tipoCucina,
-                      String ownerUsername) {
+                    double latitudine, double longitudine, int fasciaPrezzo,
+                    boolean delivery, boolean prenotazione, String tipoCucina,
+                    String idRistoratore) {
 
         this.id = id;
         this.nome = nome;
         this.nazione = nazione;
         this.citta = citta;
         this.indirizzo = indirizzo;
-        this.lat = lat;
-        this.lon = lon;
-        this.prezzo = prezzo;
+        this.latitudine = latitudine;
+        this.longitudine = longitudine;
+        this.fasciaPrezzo = fasciaPrezzo;
         this.delivery = delivery;
         this.prenotazione = prenotazione;
         this.tipoCucina = tipoCucina;
-        this.ownerUsername = ownerUsername;
+        this.idRistoratore = idRistoratore;
     }
 
     public int getId() {
@@ -58,15 +58,15 @@ public class Ristorante implements Serializable {
     }
 
     public double getLat() {
-        return lat;
+        return latitudine;
     }
 
     public double getLon() {
-        return lon;
+        return longitudine;
     }
 
     public int getPrezzo() {
-        return prezzo;
+        return fasciaPrezzo;
     }
 
     public boolean isDelivery() {
@@ -81,8 +81,8 @@ public class Ristorante implements Serializable {
         return tipoCucina;
     }
 
-    public String getOwnerUsername() {
-        return ownerUsername;
+    public String getIdRistoratore() {
+        return idRistoratore;
     }
 
     @Override

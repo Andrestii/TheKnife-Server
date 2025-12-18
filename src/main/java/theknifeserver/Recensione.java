@@ -6,14 +6,14 @@ public class Recensione implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int id;
-    private String username;
+    private int idUtente;
     private int stelle;
     private String testo;
     private String risposta;
 
-    public Recensione(int id, String username, int stelle, String testo, String risposta) {
+    public Recensione(int id, int idUtente, int stelle, String testo, String risposta) {
         this.id = id;
-        this.username = username;
+        this.idUtente = idUtente;
         this.stelle = stelle;
         this.testo = testo;
         this.risposta = risposta;
@@ -23,8 +23,8 @@ public class Recensione implements Serializable {
         return id;
     }
 
-    public String getUsername() {
-        return username;
+    public int getIdUtente() {
+        return idUtente;
     }
 
     public int getStelle() {
@@ -41,6 +41,6 @@ public class Recensione implements Serializable {
 
     @Override
     public String toString() {
-        return "[" + stelle + "★] " + testo + " (di " + username + ")";
+        return "[" + stelle + "★] " + testo + " (di utente con ID " + idUtente + ")";
     }
 }
