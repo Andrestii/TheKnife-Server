@@ -57,6 +57,22 @@ public class Database {
         }
     }
 
+    public boolean addUserDate(String data) { // Formato data per SQL: YYYY-MM-DD
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO utenti(data_nascita) VALUES (?)"
+            );
+            ps.setString(1, data);
+
+            ps.executeUpdate();
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore addUserDate: " + e.getMessage());
+            return false;
+        }
+    }
 
     public boolean validateUser(String username, String password) {
         try {
@@ -80,7 +96,7 @@ public class Database {
     public Utente getUserData(String username) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "SELECT nome, cognome, username, ruolo, domicilio FROM utenti WHERE id=?"
+                "SELECT nome, cognome, username, ruolo, domicilio, data_nascita FROM utenti WHERE username=?"
             );
             ps.setString(1, username);
 
@@ -92,7 +108,8 @@ public class Database {
                 rs.getString("ruolo"),
                 rs.getString("domicilio"),
                 rs.getString("nome"),
-                rs.getString("cognome")
+                rs.getString("cognome"),
+                rs.getString("data_nascita")
             );
 
         } catch (SQLException e) {

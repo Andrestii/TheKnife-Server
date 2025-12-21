@@ -69,6 +69,13 @@ public class ServerThread implements Runnable {
                         break;
                     }
 
+                    case "addUserData": {
+                        String dataNascita = (String) in.readObject();
+
+                        database.addUserDate(dataNascita);
+                        out.writeObject(new ServerResponse("OK", "Data di nascita utente aggiunta"));
+                        break;
+                    }
 
                     
                     // RISTORANTI
