@@ -69,7 +69,7 @@ public class ServerThread implements Runnable {
                         break;
                     }
 
-                    case "addUserData": {
+                    case "addUserDate": {
                         String dataNascita = (String) in.readObject();
 
                         database.addUserDate(dataNascita);
