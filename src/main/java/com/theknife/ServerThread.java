@@ -70,9 +70,10 @@ public class ServerThread implements Runnable {
                     }
 
                     case "addUserDate": {
+                        String username = (String) in.readObject();
                         String dataNascita = (String) in.readObject();
 
-                        database.addUserDate(dataNascita);
+                        database.addUserDate(username, dataNascita);
                         out.writeObject(new ServerResponse("OK", "Data di nascita utente aggiunta"));
                         break;
                     }

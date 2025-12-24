@@ -37,8 +37,13 @@ public class Database {
     public boolean registerUser(String nome, String cognome, String username,
                                 String password, String ruolo, String domicilio) {
         try {
+            if(!isUsernameFree(username)){ // Se username esiste già
+                System.out.println("[DB] Errore registerUser: Username già esistente");
+                return false; 
+            }
+            
             PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO utenti(nome, cognome, username, password, ruolo, domicilio) VALUES (?, ?, ?, ?, ?, ?)"
+                "INSERT INTO utenti(nome, cognome, username, password, ruolo, domicilio) VALUES (?, ?, ?, ?, ?, ?)"
             );
             ps.setString(1, nome);
             ps.setString(2, cognome);
@@ -57,12 +62,13 @@ public class Database {
         }
     }
 
-    public boolean addUserDate(String data) { // Formato data per SQL: YYYY-MM-DD
+    public boolean addUserDate(String username, String data) { // Formato data per SQL: YYYY-MM-DD
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO utenti(data_nascita) VALUES (?)"
+                    "UPDATE utenti SET data_nascita=? WHERE username=?"
             );
             ps.setString(1, data);
+            ps.setString(2, username);
 
             ps.executeUpdate();
             return true;
@@ -255,7 +261,24 @@ public class Database {
     }
 
 
-    // CONTROLLI DI PERMESSO
+    // CONTROLLI
+    public boolean isUsernameFree(String username) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                "SELECT 1 FROM utenti WHERE username=?"
+            );
+            ps.setString(1, username);
+
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore isOwnerOfRestaurant: " + e.getMessage());
+            return false;
+        }
+    }
+
     public boolean isOwnerOfRestaurant(String username, int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
