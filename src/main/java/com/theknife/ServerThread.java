@@ -55,15 +55,15 @@ public class ServerThread implements Runnable {
                     }
 
                     case "login": {
-                        String user = (String) in.readObject();
-                        String pass = (String) in.readObject();
+                        String username = (String) in.readObject();
+                        String password = (String) in.readObject();
 
-                        if (!database.validateUser(user, pass)) {
+                        if (!database.validateUser(username, password)) {
                             out.writeObject(new ServerResponse("ERROR", "Credenziali errate"));
                             break;
                         }
 
-                        Utente u = database.getUserData(user);
+                        Utente u = database.getUserData(username);
                         out.writeObject(new ServerResponse("OK", u));
 
                         break;
