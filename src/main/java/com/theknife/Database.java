@@ -504,14 +504,24 @@ public class Database {
     }
 
     // PREFERITI
-    public void addFavorite(int idUtente, int idRistorante) {
+    public void addFavorite(String username, int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO preferiti(id_utente, id_ristorante) VALUES (?, ?)"
+                "INSERT INTO preferiti (id_utente, id_ristorante) " + 
+                "SELECT u.id, ? " +
+                "FROM utenti u " +
+                "WHERE u.username = ? " +
+                "ON CONFLICT (id_utente, id_ristorante) DO NOTHING;"
             );
-            ps.setInt(1, idUtente);
-            ps.setInt(2, idRistorante);
+            ps.setInt(1, idRistorante);
+            ps.setString(2, username);
+
             ps.executeUpdate();
+
+            //int rows = ps.executeUpdate();
+            //if (rows == 0) { // o username non esiste, oppure era già preferito (con DO NOTHING)
+            //    System.out.println("[DB] Nessun inserimento: utente inesistente o preferito già presente.");
+            //}
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -520,13 +530,16 @@ public class Database {
     }
 
 
-    public void removeFavorite(int idUtente, int idRistorante) {
+    public void removeFavorite(String username, int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "DELETE FROM preferiti WHERE id_utente=? AND id_ristorante=?"
+                "DELETE FROM preferiti " + 
+                "WHERE id_utente=(SELECT id FROM utenti WHERE username=?) " + 
+                "AND id_ristorante=?;"
             );
-            ps.setInt(1, idUtente);
+            ps.setString(1, username);
             ps.setInt(2, idRistorante);
+
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -536,14 +549,14 @@ public class Database {
     }
 
 
-    public List<Ristorante> listFavorites(int idUtente) {
+    public List<Ristorante> listFavorites(String username) {
         List<Ristorante> lista = new ArrayList<>();
 
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "SELECT r.* FROM preferiti p JOIN ristoranti r ON p.id_ristorante=r.id WHERE p.id_utente=?"
+                "SELECT r.* FROM preferiti p JOIN ristoranti r ON p.id_ristorante=r.id WHERE p.id_utente=(SELECT id FROM utenti WHERE username=?)"
             );
-            ps.setInt(1, idUtente);
+            ps.setString(1, username);
 
             ResultSet rs = ps.executeQuery();
 

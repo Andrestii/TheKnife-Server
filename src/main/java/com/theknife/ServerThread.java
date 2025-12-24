@@ -277,26 +277,26 @@ public class ServerThread implements Runnable {
                     // PREFERITI
                     
                     case "addFavorite": {
-                        int idUser = (int) in.readObject();
+                        String username = (String) in.readObject();
                         int idFav = (int) in.readObject();
 
-                        database.addFavorite(idUser, idFav);
+                        database.addFavorite(username, idFav);
                         out.writeObject(new ServerResponse("OK", "Aggiunto ai preferiti"));
                         break;
                     }
 
                     case "removeFavorite": {
-                        int idUser = (int) in.readObject();
+                        String username = (String) in.readObject();
                         int idFav = (int) in.readObject();
 
-                        database.removeFavorite(idUser, idFav);
+                        database.removeFavorite(username, idFav);
                         out.writeObject(new ServerResponse("OK", "Rimosso dai preferiti"));
                         break;
                     }
 
                     case "listFavorites": {
-                        int idUser = (int) in.readObject();
-                        List<Ristorante> list = database.listFavorites(idUser);
+                        String username = (String) in.readObject();
+                        List<Ristorante> list = database.listFavorites(username);
 
                         out.writeObject(new ServerResponse("OK", list));
                         break;
