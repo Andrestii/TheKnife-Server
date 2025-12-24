@@ -41,7 +41,7 @@ public class Database {
                 System.out.println("[DB] Errore registerUser: Username già esistente");
                 return false; 
             }
-            
+
             PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO utenti(nome, cognome, username, password, ruolo, domicilio) VALUES (?, ?, ?, ?, ?, ?)"
             );
@@ -62,25 +62,7 @@ public class Database {
         }
     }
 
-    public boolean addUserDate(String username, String data) { // Formato data per SQL: YYYY-MM-DD
-        try {
-            PreparedStatement ps = connection.prepareStatement(
-                    "UPDATE utenti SET data_nascita=? WHERE username=?"
-            );
-            ps.setString(1, data);
-            ps.setString(2, username);
-
-            ps.executeUpdate();
-            return true;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("[DB] Errore addUserDate: " + e.getMessage());
-            return false;
-        }
-    }
-
-    public boolean validateUser(String username, String password) {
+    public boolean validateUser(String username, String password) { // Per login
         try {
             PreparedStatement ps = connection.prepareStatement(
                     "SELECT 1 FROM utenti WHERE username=? AND password=?"
@@ -98,6 +80,54 @@ public class Database {
         }
     }
 
+    public void modifyUserNomeCognome(String username, String nome, String cognome) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    "UPDATE utenti SET nome=?, cognome=? WHERE username=?"
+            );
+            ps.setString(1, nome);
+            ps.setString(2, cognome);
+            ps.setString(3, username);
+
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore modifyUserNomeCognome: " + e.getMessage());
+        }
+    }
+
+    public void modifyUserDate(String username, String data) { // Formato data per SQL: YYYY-MM-DD
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    "UPDATE utenti SET data_nascita=? WHERE username=?"
+            );
+            ps.setString(1, data);
+            ps.setString(2, username);
+
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore modifyUserDate: " + e.getMessage());
+        }
+    }
+
+    public void modifyUserDomicilio(String username, String domicilio) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    "UPDATE utenti SET domicilio=? WHERE username=?"
+            );
+            ps.setString(1, domicilio);
+            ps.setString(2, username);
+
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore modifyUserDomicilio: " + e.getMessage());
+        }
+    }
 
     public Utente getUserData(String username) {
         try {

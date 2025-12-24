@@ -69,12 +69,31 @@ public class ServerThread implements Runnable {
                         break;
                     }
 
-                    case "addUserDate": {
+                    case "modifyUserNomeCognome": {
+                        String username = (String) in.readObject();
+                        String nome = (String) in.readObject();
+                        String cognome = (String) in.readObject();
+
+                        database.modifyUserNomeCognome(username, nome, cognome);
+                        out.writeObject(new ServerResponse("OK", "Nome e cognome utente aggiornati"));
+                        break;
+                    }
+
+                    case "modifyUserDate": {
                         String username = (String) in.readObject();
                         String dataNascita = (String) in.readObject();
 
-                        database.addUserDate(username, dataNascita);
-                        out.writeObject(new ServerResponse("OK", "Data di nascita utente aggiunta"));
+                        database.modifyUserDate(username, dataNascita);
+                        out.writeObject(new ServerResponse("OK", "Data di nascita utente aggiornata"));
+                        break;
+                    }
+
+                    case "modifyUserDomicilio": {
+                        String username = (String) in.readObject();
+                        String domicilio = (String) in.readObject();
+
+                        database.modifyUserDomicilio(username, domicilio);
+                        out.writeObject(new ServerResponse("OK", "Domicilio utente aggiornato"));
                         break;
                     }
 
