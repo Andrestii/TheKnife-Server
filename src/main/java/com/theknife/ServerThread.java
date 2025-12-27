@@ -41,10 +41,11 @@ public class ServerThread implements Runnable {
                         String cognome = (String) in.readObject();
                         String username = (String) in.readObject();
                         String password = (String) in.readObject();
-                        String ruolo = (String) in.readObject();
+                        String data_nascita = (String) in.readObject();
                         String domicilio = (String) in.readObject();
+                        String ruolo = (String) in.readObject();
 
-                        boolean ok = database.registerUser(nome, cognome, username, password, ruolo, domicilio);
+                        boolean ok = database.registerUser(nome, cognome, username, password, data_nascita, domicilio, ruolo);
 
                         if (ok)
                             out.writeObject(new ServerResponse("OK", "Registrazione completata"));
@@ -97,6 +98,23 @@ public class ServerThread implements Runnable {
                         break;
                     }
 
+                    case "modifyUserUsername": {
+                        String username = (String) in.readObject();
+                        String newUsername = (String) in.readObject();
+
+                        database.modifyUserUsername(username, newUsername);
+                        out.writeObject(new ServerResponse("OK", "Username utente aggiornato"));
+                        break;
+                    }
+
+                    case "modifyUserPassword": {
+                        String username = (String) in.readObject();
+                        String password = (String) in.readObject();
+
+                        database.modifyUserPassword(username, password);
+                        out.writeObject(new ServerResponse("OK", "Password utente aggiornata"));
+                        break;
+                    }
                     
                     // RISTORANTI
                     

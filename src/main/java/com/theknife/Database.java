@@ -35,7 +35,7 @@ public class Database {
 
     // UTENTI
     public boolean registerUser(String nome, String cognome, String username,
-                                String password, String ruolo, String domicilio) {
+                                String password, String data_nascita, String domicilio, String ruolo) {
         try {
             if(!isUsernameFree(username)){ // Se username esiste già
                 System.out.println("[DB] Errore registerUser: Username già esistente");
@@ -43,14 +43,15 @@ public class Database {
             }
 
             PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO utenti(nome, cognome, username, password, ruolo, domicilio) VALUES (?, ?, ?, ?, ?, ?)"
+                "INSERT INTO utenti(nome, cognome, username, password, data_nascita, domicilio, ruolo) VALUES (?, ?, ?, ?, ?, ?, ?)"
             );
             ps.setString(1, nome);
             ps.setString(2, cognome);
             ps.setString(3, username);
             ps.setString(4, password);
-            ps.setString(5, ruolo);
+            ps.setString(5, data_nascita);
             ps.setString(6, domicilio);
+            ps.setString(7, ruolo);
 
             ps.executeUpdate();
             return true;
@@ -126,6 +127,43 @@ public class Database {
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("[DB] Errore modifyUserDomicilio: " + e.getMessage());
+        }
+    }
+
+    public void modifyUserUsername(String username, String newUsername) {
+        try {
+            if(!isUsernameFree(newUsername)){ // Se username esiste già
+                System.out.println("[DB] Errore modifyUserUsername: Username già esistente");
+                return; 
+            }
+
+            PreparedStatement ps = connection.prepareStatement(
+                    "UPDATE utenti SET username=? WHERE username=?"
+            );
+            ps.setString(1, newUsername);
+            ps.setString(2, username);
+
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore modifyUserUsername: " + e.getMessage());
+        }
+    }
+
+    public void modifyUserPassword(String username, String password) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    "UPDATE utenti SET password=? WHERE username=?"
+            );
+            ps.setString(1, password);
+            ps.setString(2, username);
+
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore modifyUserPassword: " + e.getMessage());
         }
     }
 
