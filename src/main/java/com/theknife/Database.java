@@ -195,7 +195,7 @@ public class Database {
 
 
     // RISTORANTI
-    public void addRestaurant(int id_ristoratore, String nome, String nazione, String citta,
+    public boolean addRestaurant(int id_ristoratore, String nome, String nazione, String citta,
                             String indirizzo, double lat, double lon, int prezzo,
                             boolean delivery, boolean prenotazione, String tipoCucina) {
         try {
@@ -217,10 +217,12 @@ public class Database {
             ps.setString(11, tipoCucina);
 
             ps.executeUpdate();
+            return true;
 
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("[DB] Errore addRestaurant: " + e.getMessage());
+            return false;
         }
     }
 

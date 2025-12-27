@@ -131,10 +131,14 @@ public class ServerThread implements Runnable {
                         boolean prenotazione = (boolean) in.readObject();
                         String tipoCucina = (String) in.readObject();
 
-                        database.addRestaurant(id_ristoratore, nomeRist, nazione, citta, indirizzo,
+                        boolean ok = database.addRestaurant(id_ristoratore, nomeRist, nazione, citta, indirizzo,
                                 lat, lon, prezzo, delivery, prenotazione, tipoCucina);
 
-                        out.writeObject(new ServerResponse("OK", "Ristorante aggiunto"));
+                        if (ok)
+                            out.writeObject(new ServerResponse("OK", "Ristorante aggiunto"));
+                        else
+                            out.writeObject(new ServerResponse("ERROR", "Errore nell'aggiunta del ristorante"));
+                        
                         break;
                     }
 
