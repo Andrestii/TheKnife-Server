@@ -7,7 +7,6 @@ import java.util.List;
 
 import theknifeserver.Recensione;
 import theknifeserver.Ristorante;
-import theknifeserver.Utente;
 
 public class ServerThread implements Runnable {
 

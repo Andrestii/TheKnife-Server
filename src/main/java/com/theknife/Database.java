@@ -16,7 +16,6 @@ import java.util.List;
 
 import theknifeserver.Recensione;
 import theknifeserver.Ristorante;
-import theknifeserver.Utente;
 
 public class Database {
 
@@ -185,7 +184,7 @@ public class Database {
     public Utente getUserData(String username) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "SELECT nome, cognome, username, ruolo, domicilio, data_nascita FROM utenti WHERE username=?"
+                "SELECT nome, cognome, data_nascita, domicilio, username, password, ruolo FROM utenti WHERE username=?"
             );
             ps.setString(1, username);
 
@@ -193,12 +192,13 @@ public class Database {
             if (!rs.next()) return null;
 
             return new Utente(
-                rs.getString("username"),
-                rs.getString("ruolo"),
-                rs.getString("domicilio"),
                 rs.getString("nome"),
                 rs.getString("cognome"),
-                rs.getString("data_nascita")
+                rs.getString("data_nascita"),
+                rs.getString("domicilio"),
+                rs.getString("username"),
+                rs.getString("password"),
+                rs.getString("ruolo")
             );
 
         } catch (SQLException e) {
