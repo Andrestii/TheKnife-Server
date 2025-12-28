@@ -1,11 +1,15 @@
 package com.theknife;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,9 +53,20 @@ public class Database {
             ps.setString(2, cognome);
             ps.setString(3, username);
             ps.setString(4, password);
-            ps.setString(5, data_nascita);
+            // data_nascita (colonna DATE)
+            if (data_nascita == null || data_nascita.isBlank()) {
+                ps.setNull(5, Types.DATE);
+            } else {
+                try {
+                    LocalDate ld = LocalDate.parse(data_nascita.trim()); // yyyy-MM-dd
+                    ps.setDate(5, Date.valueOf(ld));
+                } catch (DateTimeParseException ex) {
+                    System.out.println("[DB] Errore registerUser: data_nascita non valida: " + data_nascita);
+                    return false;
+                }
+            }
             ps.setString(6, domicilio);
-            ps.setString(7, ruolo);
+            ps.setString(7, ruolo.toLowerCase());
 
             ps.executeUpdate();
             return true;
@@ -340,11 +355,11 @@ public class Database {
             ps.setString(1, username);
 
             ResultSet rs = ps.executeQuery();
-            return rs.next();
+            return !rs.next();
 
         } catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("[DB] Errore isOwnerOfRestaurant: " + e.getMessage());
+            System.out.println("[DB] Errore isUsernameFree: " + e.getMessage());
             return false;
         }
     }

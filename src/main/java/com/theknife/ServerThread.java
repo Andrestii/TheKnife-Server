@@ -7,7 +7,6 @@ import java.util.List;
 
 import theknifeserver.Recensione;
 import theknifeserver.Ristorante;
-import theknifeserver.ServerResponse;
 import theknifeserver.Utente;
 
 public class ServerThread implements Runnable {
@@ -47,10 +46,15 @@ public class ServerThread implements Runnable {
 
                         boolean ok = database.registerUser(nome, cognome, username, password, data_nascita, domicilio, ruolo);
 
-                        if (ok)
+                        if (ok) {
                             out.writeObject(new ServerResponse("OK", "Registrazione completata"));
-                        else
+                            System.out.println("Registrazione completata");
+                        }
+                            
+                        else {
                             out.writeObject(new ServerResponse("ERROR", "Errore nella registrazione"));
+                            System.out.println("Errore nella registrazione");
+                        }
 
                         break;
                     }
