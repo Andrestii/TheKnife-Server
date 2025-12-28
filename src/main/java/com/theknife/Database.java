@@ -95,89 +95,51 @@ public class Database {
         }
     }
 
-    public void modifyUserNomeCognome(String username, String nome, String cognome) {
+    public boolean updateUserInfo(String currentUsername, String nome, String cognome, String dataNascita, String domicilio, String newUsername, String newPassword) {
         try {
-            PreparedStatement ps = connection.prepareStatement(
-                    "UPDATE utenti SET nome=?, cognome=? WHERE username=?"
-            );
-            ps.setString(1, nome);
-            ps.setString(2, cognome);
-            ps.setString(3, username);
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("[DB] Errore modifyUserNomeCognome: " + e.getMessage());
-        }
-    }
-
-    public void modifyUserDate(String username, String data) { // Formato data per SQL: YYYY-MM-DD
-        try {
-            PreparedStatement ps = connection.prepareStatement(
-                    "UPDATE utenti SET data_nascita=? WHERE username=?"
-            );
-            ps.setString(1, data);
-            ps.setString(2, username);
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("[DB] Errore modifyUserDate: " + e.getMessage());
-        }
-    }
-
-    public void modifyUserDomicilio(String username, String domicilio) {
-        try {
-            PreparedStatement ps = connection.prepareStatement(
-                    "UPDATE utenti SET domicilio=? WHERE username=?"
-            );
-            ps.setString(1, domicilio);
-            ps.setString(2, username);
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("[DB] Errore modifyUserDomicilio: " + e.getMessage());
-        }
-    }
-
-    public void modifyUserUsername(String username, String newUsername) {
-        try {
-            if(!isUsernameFree(newUsername)){ // Se username esiste già
-                System.out.println("[DB] Errore modifyUserUsername: Username già esistente");
-                return; 
+            // Controlla se il nuovo username è diverso e già esistente
+            if (newUsername != null && !newUsername.equals(currentUsername)) {
+                if (!isUsernameFree(newUsername)) {
+                    System.out.println("[DB] updateUserInfo: newUsername già esistente");
+                    return false;
+                }
             }
 
-            PreparedStatement ps = connection.prepareStatement(
-                    "UPDATE utenti SET username=? WHERE username=?"
-            );
-            ps.setString(1, newUsername);
-            ps.setString(2, username);
+            boolean changePassword = (newPassword != null && !newPassword.isBlank());
+            String sql;
 
-            ps.executeUpdate();
+            if (changePassword) {
+                sql = "UPDATE utenti SET nome=?, cognome=?, data_nascita=?, domicilio=?, username=?, password=? WHERE username=?";
+            } else {
+                sql = "UPDATE utenti SET nome=?, cognome=?, data_nascita=?, domicilio=?, username=? WHERE username=?";
+            }
 
-        } catch (SQLException e) {
+            PreparedStatement ps = connection.prepareStatement(sql);
+
+            ps.setString(1, nome);
+            ps.setString(2, cognome);
+            if (dataNascita == null || dataNascita.isBlank()) {
+                ps.setNull(3, Types.DATE);
+            } else {
+                LocalDate ld = LocalDate.parse(dataNascita);
+                ps.setDate(3, Date.valueOf(ld));
+            }
+            ps.setString(4, domicilio);
+            ps.setString(5, newUsername);
+            if (changePassword) {
+                ps.setString(6, newPassword);
+                ps.setString(7, currentUsername);
+            } else {
+                ps.setString(6, currentUsername);
+            }
+
+            int rows = ps.executeUpdate();
+            return rows > 0;
+
+        } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("[DB] Errore modifyUserUsername: " + e.getMessage());
-        }
-    }
-
-    public void modifyUserPassword(String username, String password) {
-        try {
-            PreparedStatement ps = connection.prepareStatement(
-                    "UPDATE utenti SET password=? WHERE username=?"
-            );
-            ps.setString(1, password);
-            ps.setString(2, username);
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("[DB] Errore modifyUserPassword: " + e.getMessage());
+            System.out.println("[DB] Errore updateUserInfo: " + e.getMessage());
+            return false;
         }
     }
 

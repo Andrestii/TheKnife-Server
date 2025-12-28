@@ -47,7 +47,7 @@ public class ServerThread implements Runnable {
 
                         if (ok) {
                             out.writeObject(new ServerResponse("OK", "Registrazione completata"));
-                            System.out.println("Registrazione completata");
+                            System.out.println("Registrazione completata!");
                         }
                             
                         else {
@@ -64,58 +64,32 @@ public class ServerThread implements Runnable {
 
                         if (!database.validateUser(username, password)) {
                             out.writeObject(new ServerResponse("ERROR", "Credenziali errate"));
+                            System.out.println("Credenziali errate");
                             break;
                         }
 
                         Utente u = database.getUserData(username);
                         out.writeObject(new ServerResponse("OK", u));
-
+                        System.out.println("Login effettuato con successo!");
                         break;
                     }
 
-                    case "modifyUserNomeCognome": {
-                        String username = (String) in.readObject();
+                    case "updateUserInfo": {
+                        String currentUsername = (String) in.readObject();   // username attuale (chiave per trovare l'utente)
                         String nome = (String) in.readObject();
                         String cognome = (String) in.readObject();
-
-                        database.modifyUserNomeCognome(username, nome, cognome);
-                        out.writeObject(new ServerResponse("OK", "Nome e cognome utente aggiornati"));
-                        break;
-                    }
-
-                    case "modifyUserDate": {
-                        String username = (String) in.readObject();
-                        String dataNascita = (String) in.readObject();
-
-                        database.modifyUserDate(username, dataNascita);
-                        out.writeObject(new ServerResponse("OK", "Data di nascita utente aggiornata"));
-                        break;
-                    }
-
-                    case "modifyUserDomicilio": {
-                        String username = (String) in.readObject();
+                        String dataNascita = (String) in.readObject();       
                         String domicilio = (String) in.readObject();
+                        String newUsername = (String) in.readObject();       // può essere uguale al currentUsername
+                        String newPassword = (String) in.readObject();
 
-                        database.modifyUserDomicilio(username, domicilio);
-                        out.writeObject(new ServerResponse("OK", "Domicilio utente aggiornato"));
-                        break;
-                    }
-
-                    case "modifyUserUsername": {
-                        String username = (String) in.readObject();
-                        String newUsername = (String) in.readObject();
-
-                        database.modifyUserUsername(username, newUsername);
-                        out.writeObject(new ServerResponse("OK", "Username utente aggiornato"));
-                        break;
-                    }
-
-                    case "modifyUserPassword": {
-                        String username = (String) in.readObject();
-                        String password = (String) in.readObject();
-
-                        database.modifyUserPassword(username, password);
-                        out.writeObject(new ServerResponse("OK", "Password utente aggiornata"));
+                        if (database.updateUserInfo(currentUsername, nome, cognome, dataNascita, domicilio, newUsername, newPassword)) {
+                            out.writeObject(new ServerResponse("OK", "Dati utente aggiornati"));
+                            System.out.println("Dati utente aggiornati con successo!");
+                        } else {
+                            out.writeObject(new ServerResponse("ERROR", "Errore nell'aggiornamento dei dati utente"));
+                            System.out.println("Errore nell'aggiornamento dei dati utente");
+                        }
                         break;
                     }
                     
