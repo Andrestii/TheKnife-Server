@@ -51,7 +51,7 @@ public class Database {
             ps.setString(1, nome);
             ps.setString(2, cognome);
             ps.setString(3, username);
-            ps.setString(4, password);
+            ps.setString(4, PasswordUtil.hashPassword(password));
             // data_nascita (colonna DATE)
             if (data_nascita == null || data_nascita.isBlank()) {
                 ps.setNull(5, Types.DATE);
@@ -80,13 +80,15 @@ public class Database {
     public boolean validateUser(String username, String password) { // Per login
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "SELECT 1 FROM utenti WHERE username=? AND password=?"
+                "SELECT password FROM utenti WHERE username=?"
             );
             ps.setString(1, username);
-            ps.setString(2, password);
 
             ResultSet rs = ps.executeQuery();
-            return rs.next();
+            if (!rs.next()) return false; // username non esiste
+
+            String storedHash = rs.getString("password");
+            return PasswordUtil.verifyPassword(password, storedHash);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -127,7 +129,7 @@ public class Database {
             ps.setString(4, domicilio);
             ps.setString(5, newUsername);
             if (changePassword) {
-                ps.setString(6, newPassword);
+                ps.setString(6, PasswordUtil.hashPassword(newPassword));
                 ps.setString(7, currentUsername);
             } else {
                 ps.setString(6, currentUsername);
