@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import theknifeserver.Recensione;
-import theknifeserver.Ristorante;
 
 public class Database {
 
@@ -207,6 +206,28 @@ public class Database {
         }
     }
 
+    public List<Ristorante> getMyRestaurants(String usernameRistoratore) {
+        List<Ristorante> lista = new ArrayList<>();
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                "SELECT * FROM ristoranti WHERE id_ristoratore=(SELECT id FROM utenti WHERE username=?)"
+            );
+            ps.setString(1, usernameRistoratore);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                lista.add(buildRestaurantFromResultSet(rs));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return lista;
+    }
+
     public List<Ristorante> searchRestaurants(String filtro) {
         List<Ristorante> lista = new ArrayList<>();
 
@@ -302,7 +323,7 @@ public class Database {
             rs.getString("indirizzo"),
             rs.getDouble("latitudine"),
             rs.getDouble("longitudine"),
-            rs.getInt("fascia_prezzo"),
+            rs.getInt("prezzo"),
             rs.getBoolean("delivery"),
             rs.getBoolean("prenotazione"),
             rs.getString("tipo_cucina"),

@@ -17,7 +17,7 @@ CREATE TABLE ristoranti (
     indirizzo VARCHAR(100),
     latitudine DOUBLE PRECISION,
     longitudine DOUBLE PRECISION,
-    fascia_prezzo INT CHECK (fascia_prezzo >= 0),
+    prezzo INT CHECK (fascia_prezzo >= 0),
     delivery BOOLEAN DEFAULT FALSE,
     prenotazione BOOLEAN DEFAULT FALSE,
     tipo_cucina VARCHAR(50),

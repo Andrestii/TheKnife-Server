@@ -6,7 +6,6 @@ import java.net.Socket;
 import java.util.List;
 
 import theknifeserver.Recensione;
-import theknifeserver.Ristorante;
 
 public class ServerThread implements Runnable {
 
@@ -31,9 +30,7 @@ public class ServerThread implements Runnable {
                 System.out.println("[SERVER] Ricevuto comando: " + command);
 
                 switch (command) {
-
                     // UTENTI
-                    
                     case "registerUser": {
                         String nome = (String) in.readObject();
                         String cognome = (String) in.readObject();
@@ -95,7 +92,6 @@ public class ServerThread implements Runnable {
                     }
                     
                     // RISTORANTI
-                    
                     case "addRestaurant": {
                         String nomeRist = (String) in.readObject();
                         String nazione = (String) in.readObject();
@@ -120,6 +116,15 @@ public class ServerThread implements Runnable {
                             out.writeObject(new ServerResponse("ERROR", "Errore nell'aggiunta del ristorante"));
                             System.out.println("Errore nell'aggiunta del ristorante");
                         }
+                        break;
+                    }
+
+                    case "getMyRestaurants": {
+                        String usernameRistoratore = (String) in.readObject();
+                        List<Ristorante> lista = database.getMyRestaurants(usernameRistoratore);
+
+                        out.writeObject(new ServerResponse("OK", lista));
+                        System.out.println("Mostro i ristoranti del ristoratore " + usernameRistoratore + " sul client...");
                         break;
                     }
 
