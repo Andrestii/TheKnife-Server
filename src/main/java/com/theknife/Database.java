@@ -174,29 +174,31 @@ public class Database {
 
 
     // RISTORANTI
-    public boolean addRestaurant(int id_ristoratore, String nome, String nazione, String citta,
-                            String indirizzo, double lat, double lon, int prezzo,
-                            boolean delivery, boolean prenotazione, String tipoCucina) {
-        try {
-            PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO ristoranti(id_ristoratore, nome, nazione, citta, indirizzo, latitudine, longitudine, fascia_prezzo, delivery, prenotazione, tipo_cucina) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            );
+    public boolean addRestaurant(String nome, String nazione, String citta, String indirizzo,
+                             double lat, double lon, boolean delivery, boolean prenotazione,
+                             String tipoCucina, int prezzo, String username_ristoratore) {
 
-            ps.setInt(1, id_ristoratore);
-            ps.setString(2, nome);
-            ps.setString(3, nazione);
-            ps.setString(4, citta);
-            ps.setString(5, indirizzo);
-            ps.setDouble(6, lat);
-            ps.setDouble(7, lon);
-            ps.setInt(8, prezzo);
-            ps.setBoolean(9, delivery);
-            ps.setBoolean(10, prenotazione);
-            ps.setString(11, tipoCucina);
+        try (PreparedStatement ps = connection.prepareStatement(
+            "INSERT INTO ristoranti(nome, nazione, citta, indirizzo, latitudine, longitudine, delivery, prenotazione, tipo_cucina, id_ristoratore, prezzo)" 
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, (SELECT id FROM utenti WHERE username = ?), ?)"
+        )) {
 
-            ps.executeUpdate();
-            return true;
+            ps.setString(1, nome);
+            ps.setString(2, nazione);
+            ps.setString(3, citta);
+            ps.setString(4, indirizzo);
+            ps.setDouble(5, lat);
+            ps.setDouble(6, lon);
+            ps.setBoolean(7, delivery);
+            ps.setBoolean(8, prenotazione);
+            ps.setString(9, tipoCucina);
+
+            // qui prima username (per la subquery), poi prezzo
+            ps.setString(10, username_ristoratore);
+            ps.setInt(11, prezzo);
+
+            int rows = ps.executeUpdate();
+            return rows == 1;
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -204,7 +206,6 @@ public class Database {
             return false;
         }
     }
-
 
     public List<Ristorante> searchRestaurants(String filtro) {
         List<Ristorante> lista = new ArrayList<>();

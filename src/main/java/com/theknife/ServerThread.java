@@ -90,32 +90,36 @@ public class ServerThread implements Runnable {
                             out.writeObject(new ServerResponse("ERROR", "Errore nell'aggiornamento dei dati utente"));
                             System.out.println("Errore nell'aggiornamento dei dati utente");
                         }
+                        out.flush();
                         break;
                     }
                     
                     // RISTORANTI
                     
                     case "addRestaurant": {
-                        int id_ristoratore = (int) in.readObject();
                         String nomeRist = (String) in.readObject();
                         String nazione = (String) in.readObject();
                         String citta = (String) in.readObject();
                         String indirizzo = (String) in.readObject();
                         double lat = (double) in.readObject();
                         double lon = (double) in.readObject();
-                        int prezzo = (int) in.readObject();
                         boolean delivery = (boolean) in.readObject();
                         boolean prenotazione = (boolean) in.readObject();
                         String tipoCucina = (String) in.readObject();
+                        String username_ristoratore = (String) in.readObject();
+                        int prezzo = (int) in.readObject();
 
-                        boolean ok = database.addRestaurant(id_ristoratore, nomeRist, nazione, citta, indirizzo,
-                                lat, lon, prezzo, delivery, prenotazione, tipoCucina);
+                        boolean ok = database.addRestaurant(nomeRist, nazione, citta, indirizzo, lat, lon, 
+                                delivery, prenotazione, tipoCucina, prezzo, username_ristoratore);
 
-                        if (ok)
+                        if (ok) {
                             out.writeObject(new ServerResponse("OK", "Ristorante aggiunto"));
-                        else
+                            System.out.println("Ristorante aggiunto con successo!");
+                        }
+                        else {
                             out.writeObject(new ServerResponse("ERROR", "Errore nell'aggiunta del ristorante"));
-
+                            System.out.println("Errore nell'aggiunta del ristorante");
+                        }
                         break;
                     }
 
