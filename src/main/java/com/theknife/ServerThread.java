@@ -21,8 +21,7 @@ public class ServerThread implements Runnable {
     public void run() {
         try (
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-        ) {
+                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());) {
 
             while (true) {
 
@@ -40,13 +39,14 @@ public class ServerThread implements Runnable {
                         String domicilio = (String) in.readObject();
                         String ruolo = (String) in.readObject();
 
-                        boolean ok = database.registerUser(nome, cognome, username, password, data_nascita, domicilio, ruolo);
+                        boolean ok = database.registerUser(nome, cognome, username, password, data_nascita, domicilio,
+                                ruolo);
 
                         if (ok) {
                             out.writeObject(new ServerResponse("OK", "Registrazione completata"));
                             System.out.println("Registrazione completata!");
                         }
-                            
+
                         else {
                             out.writeObject(new ServerResponse("ERROR", "Errore nella registrazione"));
                             System.out.println("Errore nella registrazione");
@@ -72,15 +72,17 @@ public class ServerThread implements Runnable {
                     }
 
                     case "updateUserInfo": {
-                        String currentUsername = (String) in.readObject();   // username attuale (chiave per trovare l'utente)
+                        String currentUsername = (String) in.readObject(); // username attuale (chiave per trovare
+                                                                           // l'utente)
                         String nome = (String) in.readObject();
                         String cognome = (String) in.readObject();
-                        String dataNascita = (String) in.readObject();       
+                        String dataNascita = (String) in.readObject();
                         String domicilio = (String) in.readObject();
-                        String newUsername = (String) in.readObject();       // può essere uguale al currentUsername
+                        String newUsername = (String) in.readObject(); // può essere uguale al currentUsername
                         String newPassword = (String) in.readObject();
 
-                        if (database.updateUserInfo(currentUsername, nome, cognome, dataNascita, domicilio, newUsername, newPassword)) {
+                        if (database.updateUserInfo(currentUsername, nome, cognome, dataNascita, domicilio, newUsername,
+                                newPassword)) {
                             out.writeObject(new ServerResponse("OK", "Dati utente aggiornati"));
                             System.out.println("Dati utente aggiornati con successo!");
                         } else {
@@ -90,7 +92,7 @@ public class ServerThread implements Runnable {
                         out.flush();
                         break;
                     }
-                    
+
                     // RISTORANTI
                     case "addRestaurant": {
                         String nomeRist = (String) in.readObject();
@@ -105,14 +107,13 @@ public class ServerThread implements Runnable {
                         String username_ristoratore = (String) in.readObject();
                         int prezzo = (int) in.readObject();
 
-                        boolean ok = database.addRestaurant(nomeRist, nazione, citta, indirizzo, lat, lon, 
+                        boolean ok = database.addRestaurant(nomeRist, nazione, citta, indirizzo, lat, lon,
                                 delivery, prenotazione, tipoCucina, prezzo, username_ristoratore);
 
                         if (ok) {
                             out.writeObject(new ServerResponse("OK", "Ristorante aggiunto"));
                             System.out.println("Ristorante aggiunto con successo!");
-                        }
-                        else {
+                        } else {
                             out.writeObject(new ServerResponse("ERROR", "Errore nell'aggiunta del ristorante"));
                             System.out.println("Errore nell'aggiunta del ristorante");
                         }
@@ -124,7 +125,36 @@ public class ServerThread implements Runnable {
                         List<Ristorante> lista = database.getMyRestaurants(usernameRistoratore);
 
                         out.writeObject(new ServerResponse("OK", lista));
-                        System.out.println("Mostro i ristoranti del ristoratore " + usernameRistoratore + " sul client...");
+                        System.out.println(
+                                "Mostro i ristoranti del ristoratore " + usernameRistoratore + " sul client...");
+                        break;
+                    }
+
+                    case "updateRestaurant": {
+                        int id = (Integer) in.readObject();
+                        String nome = (String) in.readObject();
+                        String nazione = (String) in.readObject();
+                        String citta = (String) in.readObject();
+                        String indirizzo = (String) in.readObject();
+                        double lat = (Double) in.readObject();
+                        double lon = (Double) in.readObject();
+                        boolean delivery = (Boolean) in.readObject();
+                        boolean prenotazione = (Boolean) in.readObject();
+                        String tipoCucina = (String) in.readObject();
+                        int prezzo = (Integer) in.readObject();
+                        boolean ok = database.updateRestaurant(
+                                id, nome, nazione, citta, indirizzo,
+                                lat, lon, delivery, prenotazione, tipoCucina, prezzo);
+
+                        if (ok) {
+                            out.writeObject(new ServerResponse("OK", "Ristorante aggiornato"));
+                            System.out.println("Ristorante aggiornato con successo!");
+                        } else {
+                            out.writeObject(new ServerResponse("ERROR",
+                                    "Errore nell'aggiornamento del ristorante (possibile duplicato)"));
+                            System.out.println("Errore nell'aggiornamento del ristorante");
+                        }
+                        out.flush();
                         break;
                     }
 
@@ -145,8 +175,7 @@ public class ServerThread implements Runnable {
                         Boolean prenotazione = (Boolean) in.readObject();
 
                         List<Ristorante> lista = database.searchRestaurantsAdvanced(
-                                citta, tipoCucina, prezzoMin, prezzoMax, delivery, prenotazione
-                        );
+                                citta, tipoCucina, prezzoMin, prezzoMax, delivery, prenotazione);
 
                         out.writeObject(new ServerResponse("OK", lista));
                         break;
@@ -164,10 +193,8 @@ public class ServerThread implements Runnable {
                         break;
                     }
 
-
-                    
                     // RECENSIONI
-                    
+
                     case "addReview": {
                         String username = (String) in.readObject();
                         int idRistorante = (int) in.readObject();
@@ -186,31 +213,32 @@ public class ServerThread implements Runnable {
                     }
 
                     case "editReview": {
-                        /* 
-                        // Codice vecchio Weili
-                        int idRec = (int) in.readObject();
-                        int idUtente = (int) in.readObject();
-                        int nuoveStelle = (int) in.readObject();
-                        String nuovoTesto = (String) in.readObject();
-
-                        // controllo autore → NON può modificare rec altrui
-                        List<Recensione> recensioni = database.getReviewsForOwner(idUtente);
-                        boolean isAuthor = false;
-
-                        for (Recensione r : recensioni) {
-                            if (r.getId() == idRec && r.getIdUtente() == idUtente) {
-                                isAuthor = true;
-                                break;
-                            }
-                        }
-
-                        if (!isAuthor) {
-                            out.writeObject(new ServerResponse("ERROR", "Non puoi modificare recensioni altrui"));
-                            break;
-                        }
-
-                        database.editReview(idRec, nuoveStelle, nuovoTesto);
-                        */
+                        /*
+                         * // Codice vecchio Weili
+                         * int idRec = (int) in.readObject();
+                         * int idUtente = (int) in.readObject();
+                         * int nuoveStelle = (int) in.readObject();
+                         * String nuovoTesto = (String) in.readObject();
+                         * 
+                         * // controllo autore → NON può modificare rec altrui
+                         * List<Recensione> recensioni = database.getReviewsForOwner(idUtente);
+                         * boolean isAuthor = false;
+                         * 
+                         * for (Recensione r : recensioni) {
+                         * if (r.getId() == idRec && r.getIdUtente() == idUtente) {
+                         * isAuthor = true;
+                         * break;
+                         * }
+                         * }
+                         * 
+                         * if (!isAuthor) {
+                         * out.writeObject(new ServerResponse("ERROR",
+                         * "Non puoi modificare recensioni altrui"));
+                         * break;
+                         * }
+                         * 
+                         * database.editReview(idRec, nuoveStelle, nuovoTesto);
+                         */
 
                         String username = (String) in.readObject();
                         int idRistorante = (int) in.readObject();
@@ -230,28 +258,29 @@ public class ServerThread implements Runnable {
 
                     case "deleteReview": {
                         /*
-                        // Codice vecchio Weili
-                        int idRec = (int) in.readObject();
-                        int idUtente = (int) in.readObject();
-
-                        // controllo se l'autore e' il ristoratore
-                        List<Recensione> recensioni = database.getReviewsForOwner(idUtente);
-                        boolean isAuthor = false;
-
-                        for (Recensione r : recensioni) {
-                            if (r.getId() == idRec && r.getIdUtente() == idUtente) {
-                                isAuthor = true;
-                                break;
-                            }
-                        }
-
-                        if (!isAuthor) {
-                            out.writeObject(new ServerResponse("ERROR", "Non puoi eliminare recensioni altrui"));
-                            break;
-                        }
-
-                        database.deleteReview(idRec);
-                        */
+                         * // Codice vecchio Weili
+                         * int idRec = (int) in.readObject();
+                         * int idUtente = (int) in.readObject();
+                         * 
+                         * // controllo se l'autore e' il ristoratore
+                         * List<Recensione> recensioni = database.getReviewsForOwner(idUtente);
+                         * boolean isAuthor = false;
+                         * 
+                         * for (Recensione r : recensioni) {
+                         * if (r.getId() == idRec && r.getIdUtente() == idUtente) {
+                         * isAuthor = true;
+                         * break;
+                         * }
+                         * }
+                         * 
+                         * if (!isAuthor) {
+                         * out.writeObject(new ServerResponse("ERROR",
+                         * "Non puoi eliminare recensioni altrui"));
+                         * break;
+                         * }
+                         * 
+                         * database.deleteReview(idRec);
+                         */
 
                         String username = (String) in.readObject();
                         int idRistorante = (int) in.readObject();
@@ -277,13 +306,15 @@ public class ServerThread implements Runnable {
 
                     case "answerReview": { // Solo il proprietario del ristorante può rispondere
                         String usernameRistoratore = (String) in.readObject();
-                        String usernameCliente = (String) in.readObject(); // Username del cliente che ha scritto la recensione
+                        String usernameCliente = (String) in.readObject(); // Username del cliente che ha scritto la
+                                                                           // recensione
                         int idRistorante = (int) in.readObject();
                         String risposta = (String) in.readObject();
 
                         // Controllo se è il proprietario del ristorante
                         if (!database.isOwnerOfRestaurant(usernameRistoratore, idRistorante)) {
-                            out.writeObject(new ServerResponse("ERROR", "Non puoi rispondere a recensioni di ristoranti non tuoi"));
+                            out.writeObject(new ServerResponse("ERROR",
+                                    "Non puoi rispondere a recensioni di ristoranti non tuoi"));
                             break;
                         }
 
@@ -308,10 +339,8 @@ public class ServerThread implements Runnable {
                         break;
                     }
 
-
-                    
                     // PREFERITI
-                    
+
                     case "addFavorite": {
                         String username = (String) in.readObject();
                         int idFav = (int) in.readObject();
@@ -338,10 +367,8 @@ public class ServerThread implements Runnable {
                         break;
                     }
 
-
-                    
                     // DEFAULT
-                    
+
                     default:
                         out.writeObject(new ServerResponse("ERROR", "Comando non riconosciuto"));
                 }
