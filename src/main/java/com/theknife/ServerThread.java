@@ -20,9 +20,9 @@ public class ServerThread implements Runnable {
     @Override
     public void run() {
         try (
+                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());) {
-
+            ) {
             while (true) {
 
                 String command = (String) in.readObject();
@@ -153,6 +153,21 @@ public class ServerThread implements Runnable {
                             out.writeObject(new ServerResponse("ERROR",
                                     "Errore nell'aggiornamento del ristorante (possibile duplicato)"));
                             System.out.println("Errore nell'aggiornamento del ristorante");
+                        }
+                        out.flush();
+                        break;
+                    }
+
+                    case "deleteRestaurant": {
+                        int id = (Integer) in.readObject();
+                        boolean ok = database.deleteRestaurant(id);
+
+                        if (ok) {
+                            out.writeObject(new ServerResponse("OK", "Ristorante eliminato"));
+                            System.out.println("Ristorante eliminato con successo!");
+                        } else {
+                            out.writeObject(new ServerResponse("ERROR", "Errore nell'eliminazione del ristorante"));
+                            System.out.println("Errore nell'eliminazione del ristorante");
                         }
                         out.flush();
                         break;

@@ -265,6 +265,21 @@ public class Database {
         }
     }
 
+    public boolean deleteRestaurant(int id) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    "DELETE FROM ristoranti WHERE id=?");
+            ps.setInt(1, id);
+
+            return ps.executeUpdate() == 1;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore deleteRestaurant: " + e.getMessage());
+            return false;
+        }
+    }
+
     public List<Ristorante> searchRestaurants(String filtro) {
         List<Ristorante> lista = new ArrayList<>();
 
