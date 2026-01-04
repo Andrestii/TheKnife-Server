@@ -173,6 +173,7 @@ public class ServerThread implements Runnable {
                         break;
                     }
 
+                    /* // VECCHIO CODICE
                     case "searchRestaurants": {
                         String filtro = (String) in.readObject();
                         List<Ristorante> lista = database.searchRestaurants(filtro);
@@ -180,19 +181,23 @@ public class ServerThread implements Runnable {
                         out.writeObject(new ServerResponse("OK", lista));
                         break;
                     }
+                    */
 
-                    case "searchRestaurantsAdvanced": {
+                    case "searchRestaurants": {
+                        String nome = (String) in.readObject();
                         String citta = (String) in.readObject();
                         String tipoCucina = (String) in.readObject();
                         Integer prezzoMin = (Integer) in.readObject();
                         Integer prezzoMax = (Integer) in.readObject();
                         Boolean delivery = (Boolean) in.readObject();
                         Boolean prenotazione = (Boolean) in.readObject();
+                        // Manca ricerca per valutazione media stelle
 
-                        List<Ristorante> lista = database.searchRestaurantsAdvanced(
-                                citta, tipoCucina, prezzoMin, prezzoMax, delivery, prenotazione);
+                        List<Ristorante> lista = database.searchRestaurants(
+                                nome, citta, tipoCucina, prezzoMin, prezzoMax, delivery, prenotazione);
 
                         out.writeObject(new ServerResponse("OK", lista));
+                        System.out.println("Risultati della ricerca inviati al client" + lista.size());
                         break;
                     }
 

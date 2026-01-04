@@ -280,6 +280,7 @@ public class Database {
         }
     }
 
+    /* // VECCHIO CODICE
     public List<Ristorante> searchRestaurants(String filtro) {
         List<Ristorante> lista = new ArrayList<>();
 
@@ -301,8 +302,10 @@ public class Database {
 
         return lista;
     }
+    */
 
-    public List<Ristorante> searchRestaurantsAdvanced(
+    public List<Ristorante> searchRestaurants(
+            String nome,
             String citta,
             String tipoCucina,
             Integer prezzoMin,
@@ -313,14 +316,16 @@ public class Database {
         List<Ristorante> lista = new ArrayList<>();
         String query = "SELECT * FROM ristoranti WHERE 1=1 ";
 
+        if (nome != null)
+            query += " AND LOWER(nome) LIKE LOWER(?) ";
         if (citta != null)
-            query += " AND LOWER(citta) = LOWER(?) ";
+            query += " AND LOWER(citta) LIKE LOWER(?) ";
         if (tipoCucina != null)
             query += " AND LOWER(tipo_cucina) = LOWER(?) ";
         if (prezzoMin != null)
-            query += " AND fascia_prezzo >= ? ";
+            query += " AND prezzo >= ? ";
         if (prezzoMax != null)
-            query += " AND fascia_prezzo <= ? ";
+            query += " AND prezzo <= ? ";
         if (delivery != null)
             query += " AND delivery = ? ";
         if (prenotazione != null)
@@ -330,8 +335,10 @@ public class Database {
             PreparedStatement ps = connection.prepareStatement(query);
             int idx = 1;
 
+            if (nome != null)
+                ps.setString(idx++, "%" + nome + "%");
             if (citta != null)
-                ps.setString(idx++, citta);
+                ps.setString(idx++, "%" + citta + "%");
             if (tipoCucina != null)
                 ps.setString(idx++, tipoCucina);
             if (prezzoMin != null)
