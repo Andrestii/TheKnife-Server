@@ -14,8 +14,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import theknifeserver.Recensione;
-
 public class Database {
 
     private Connection connection;
@@ -502,7 +500,7 @@ public class Database {
 
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "SELECT * FROM recensioni WHERE id_ristorante=?");
+                    "SELECT * FROM recensioni WHERE id_ristorante=? ORDER BY id DESC");
             ps.setInt(1, idRistorante);
 
             ResultSet rs = ps.executeQuery();
@@ -568,6 +566,62 @@ public class Database {
             System.out.println("[DB] Errore answerReview: " + e.getMessage());
         }
     }
+
+    public Recensione getMyReview(String username, int idRistorante) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                "SELECT * FROM recensioni " +
+                "WHERE id_utente = (SELECT id FROM utenti WHERE username=?) " +
+                "AND id_ristorante=? " +
+                "LIMIT 1;"
+            );
+            ps.setString(1, username);
+            ps.setInt(2, idRistorante);
+
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) return null;
+
+            return new Recensione(
+                rs.getInt("id"),
+                rs.getInt("id_utente"),
+                rs.getInt("stelle"),
+                rs.getString("testo"),
+                rs.getString("risposta")
+            );
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore getMyReview: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public List<String> getReviewUsernames(int idRistorante) {
+        List<String> lista = new ArrayList<>();
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                "SELECT u.username " +
+                "FROM recensioni rec " +
+                "JOIN utenti u ON u.id = rec.id_utente " +
+                "WHERE rec.id_ristorante = ? " +
+                "ORDER BY rec.id DESC"
+            );
+            ps.setInt(1, idRistorante);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                lista.add(rs.getString("username"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore getReviewUsernames: " + e.getMessage());
+        }
+
+        return lista;
+    }
+
 
     // RIEPILOGO RISTORATORE
     public List<HashMap<String, Object>> getRestaurantSummary(int ownerId) {
@@ -655,6 +709,29 @@ public class Database {
 
         return lista;
     }
+
+    public boolean isFavorite(String username, int idRistorante) {
+    try {
+        PreparedStatement ps = connection.prepareStatement(
+            "SELECT 1 " +
+            "FROM preferiti p " +
+            "WHERE p.id_utente = (SELECT id FROM utenti WHERE username = ?) " +
+            "AND p.id_ristorante = ? " +
+            "LIMIT 1;"
+        );
+        ps.setString(1, username);
+        ps.setInt(2, idRistorante);
+
+        ResultSet rs = ps.executeQuery();
+        return rs.next();
+
+    } catch (SQLException e) {
+        e.printStackTrace();
+        System.out.println("[DB] Errore isFavorite: " + e.getMessage());
+        return false;
+    }
+}
+
 
     // UTILITY
     public List<HashMap<String, Object>> resultSetToList(ResultSet rs) {

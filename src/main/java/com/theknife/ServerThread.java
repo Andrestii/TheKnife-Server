@@ -5,8 +5,6 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.List;
 
-import theknifeserver.Recensione;
-
 public class ServerThread implements Runnable {
 
     private Socket socket;
@@ -197,7 +195,7 @@ public class ServerThread implements Runnable {
                                 nome, citta, tipoCucina, prezzoMin, prezzoMax, delivery, prenotazione);
 
                         out.writeObject(new ServerResponse("OK", lista));
-                        System.out.println("Risultati della ricerca inviati al client" + lista.size());
+                        System.out.println("Risultati della ricerca inviati al client. Numero ris: " + lista.size());
                         break;
                     }
 
@@ -343,6 +341,36 @@ public class ServerThread implements Runnable {
                         break;
                     }
 
+                    case "hasReviewed": {
+                        String username = (String) in.readObject();
+                        int idRistorante = (int) in.readObject();
+
+                        boolean reviewed = database.hasUserAlreadyReviewed(username, idRistorante);
+                        out.writeObject(new ServerResponse("OK", reviewed));
+                        break;
+                    }
+
+                    case "getMyReview": {
+                        String username = (String) in.readObject();
+                        int idRistorante = (int) in.readObject();
+
+                        Recensione rec = database.getMyReview(username, idRistorante);
+                        if (rec == null) {
+                            out.writeObject(new ServerResponse("ERROR", "Recensione non trovata"));
+                        } else {
+                            out.writeObject(new ServerResponse("OK", rec));
+                        }
+                        break;
+                    }
+
+                    case "viewReviewUsernames": {
+                        int idRistorante = (int) in.readObject();
+                        List<String> usernames = database.getReviewUsernames(idRistorante);
+
+                        out.writeObject(new ServerResponse("OK", usernames));
+                        break;
+                    }
+
                     case "getReviewsForOwner": {
                         String usernameRistoratore = (String) in.readObject();
                         List<Recensione> lista = database.getReviewsForOwner(usernameRistoratore);
@@ -384,6 +412,15 @@ public class ServerThread implements Runnable {
                         List<Ristorante> list = database.listFavorites(username);
 
                         out.writeObject(new ServerResponse("OK", list));
+                        break;
+                    }
+
+                    case "isFavorite": {
+                        String username = (String) in.readObject();
+                        int idRistorante = (int) in.readObject();
+
+                        boolean fav = database.isFavorite(username, idRistorante);
+                        out.writeObject(new ServerResponse("OK", fav));
                         break;
                     }
 
