@@ -211,6 +211,17 @@ public class ServerThread implements Runnable {
                         break;
                     }
 
+                    case "isOwnerOfRestaurant": {
+                        String username = (String) in.readObject();
+                        Integer idRistorante = (Integer) in.readObject();
+
+                        boolean owner = database.isOwnerOfRestaurant(username, idRistorante);
+
+                        out.writeObject(new ServerResponse("OK", owner));
+                        out.flush();
+                        break;
+                    }
+
                     // RECENSIONI
 
                     case "addReview": {
