@@ -70,8 +70,7 @@ public class ServerThread implements Runnable {
                     }
 
                     case "updateUserInfo": {
-                        String currentUsername = (String) in.readObject(); // username attuale (chiave per trovare
-                                                                           // l'utente)
+                        String currentUsername = (String) in.readObject(); // username attuale (chiave per trovare l'utente)
                         String nome = (String) in.readObject();
                         String cognome = (String) in.readObject();
                         String dataNascita = (String) in.readObject();
@@ -335,8 +334,7 @@ public class ServerThread implements Runnable {
 
                     case "answerReview": { // Solo il proprietario del ristorante può rispondere
                         String usernameRistoratore = (String) in.readObject();
-                        String usernameCliente = (String) in.readObject(); // Username del cliente che ha scritto la
-                                                                           // recensione
+                        String usernameCliente = (String) in.readObject(); // Username del cliente che ha scritto la recensione
                         int idRistorante = (int) in.readObject();
                         String risposta = (String) in.readObject();
 
@@ -347,8 +345,25 @@ public class ServerThread implements Runnable {
                             break;
                         }
 
-                        database.answerReview(usernameCliente, idRistorante, risposta);
+                        database.addAnswer(usernameCliente, idRistorante, risposta);
                         out.writeObject(new ServerResponse("OK", "Risposta salvata"));
+                        break;
+                    }
+
+                    case "deleteAnswer": { // Solo il proprietario del ristorante può eliminare la risposta
+                        String usernameRistoratore = (String) in.readObject();
+                        String usernameCliente = (String) in.readObject(); // Username del cliente che ha scritto la recensione
+                        int idRistorante = (int) in.readObject();
+
+                        // Controllo se è il proprietario del ristorante
+                        if (!database.isOwnerOfRestaurant(usernameRistoratore, idRistorante)) {
+                            out.writeObject(new ServerResponse("ERROR",
+                                    "Non puoi eliminare risposte di ristoranti non tuoi"));
+                            break;
+                        }
+
+                        database.deleteAnswer(usernameCliente, idRistorante);
+                        out.writeObject(new ServerResponse("OK", "Risposta eliminata"));
                         break;
                     }
 

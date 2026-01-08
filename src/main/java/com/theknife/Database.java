@@ -84,6 +84,7 @@ public class Database {
 
             String storedHash = rs.getString("password");
             return PasswordUtil.verifyPassword(password, storedHash);
+            //return true; // PER TESTING SENZA PASSWORD
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -551,7 +552,7 @@ public class Database {
         return lista;
     }
 
-    public void answerReview(String username, int idRistorante, String risposta) {
+    public void addAnswer(String username, int idRistorante, String risposta) {
         try {
             PreparedStatement ps = connection.prepareStatement(
                     "UPDATE recensioni SET risposta=? WHERE id_utente=(SELECT id FROM utenti WHERE username=?) AND id_ristorante=?");
@@ -563,7 +564,22 @@ public class Database {
 
         } catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("[DB] Errore answerReview: " + e.getMessage());
+            System.out.println("[DB] Errore addAnswer: " + e.getMessage());
+        }
+    }
+    
+    public void deleteAnswer(String username, int idRistorante) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    "UPDATE recensioni SET risposta=NULL WHERE id_utente=(SELECT id FROM utenti WHERE username=?) AND id_ristorante=?");
+            ps.setString(1, username);
+            ps.setInt(2, idRistorante);
+
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore deleteAnswer: " + e.getMessage());
         }
     }
 
