@@ -241,33 +241,6 @@ public class ServerThread implements Runnable {
                     }
 
                     case "editReview": {
-                        /*
-                         * // Codice vecchio Weili
-                         * int idRec = (int) in.readObject();
-                         * int idUtente = (int) in.readObject();
-                         * int nuoveStelle = (int) in.readObject();
-                         * String nuovoTesto = (String) in.readObject();
-                         * 
-                         * // controllo autore → NON può modificare rec altrui
-                         * List<Recensione> recensioni = database.getReviewsForOwner(idUtente);
-                         * boolean isAuthor = false;
-                         * 
-                         * for (Recensione r : recensioni) {
-                         * if (r.getId() == idRec && r.getIdUtente() == idUtente) {
-                         * isAuthor = true;
-                         * break;
-                         * }
-                         * }
-                         * 
-                         * if (!isAuthor) {
-                         * out.writeObject(new ServerResponse("ERROR",
-                         * "Non puoi modificare recensioni altrui"));
-                         * break;
-                         * }
-                         * 
-                         * database.editReview(idRec, nuoveStelle, nuovoTesto);
-                         */
-
                         String username = (String) in.readObject();
                         int idRistorante = (int) in.readObject();
                         int newStelle = (int) in.readObject();
@@ -285,31 +258,6 @@ public class ServerThread implements Runnable {
                     }
 
                     case "deleteReview": {
-                        /*
-                         * // Codice vecchio Weili
-                         * int idRec = (int) in.readObject();
-                         * int idUtente = (int) in.readObject();
-                         * 
-                         * // controllo se l'autore e' il ristoratore
-                         * List<Recensione> recensioni = database.getReviewsForOwner(idUtente);
-                         * boolean isAuthor = false;
-                         * 
-                         * for (Recensione r : recensioni) {
-                         * if (r.getId() == idRec && r.getIdUtente() == idUtente) {
-                         * isAuthor = true;
-                         * break;
-                         * }
-                         * }
-                         * 
-                         * if (!isAuthor) {
-                         * out.writeObject(new ServerResponse("ERROR",
-                         * "Non puoi eliminare recensioni altrui"));
-                         * break;
-                         * }
-                         * 
-                         * database.deleteReview(idRec);
-                         */
-
                         String username = (String) in.readObject();
                         int idRistorante = (int) in.readObject();
 
@@ -331,43 +279,6 @@ public class ServerThread implements Runnable {
                         out.writeObject(new ServerResponse("OK", recensioni));
                         break;
                     }
-
-                    /*
-                    case "answerReview": { // Solo il proprietario del ristorante può rispondere
-                        String usernameRistoratore = (String) in.readObject();
-                        String usernameCliente = (String) in.readObject(); // Username del cliente che ha scritto la recensione
-                        int idRistorante = (int) in.readObject();
-                        String risposta = (String) in.readObject();
-
-                        // Controllo se è il proprietario del ristorante
-                        if (!database.isOwnerOfRestaurant(usernameRistoratore, idRistorante)) {
-                            out.writeObject(new ServerResponse("ERROR",
-                                    "Non puoi rispondere a recensioni di ristoranti non tuoi"));
-                            break;
-                        }
-
-                        database.addAnswer(usernameCliente, idRistorante, risposta);
-                        out.writeObject(new ServerResponse("OK", "Risposta salvata"));
-                        break;
-                    }
-
-                    case "deleteAnswer": { // Solo il proprietario del ristorante può eliminare la risposta
-                        String usernameRistoratore = (String) in.readObject();
-                        String usernameCliente = (String) in.readObject(); // Username del cliente che ha scritto la recensione
-                        int idRistorante = (int) in.readObject();
-
-                        // Controllo se è il proprietario del ristorante
-                        if (!database.isOwnerOfRestaurant(usernameRistoratore, idRistorante)) {
-                            out.writeObject(new ServerResponse("ERROR",
-                                    "Non puoi eliminare risposte di ristoranti non tuoi"));
-                            break;
-                        }
-
-                        database.deleteAnswer(usernameCliente, idRistorante);
-                        out.writeObject(new ServerResponse("OK", "Risposta eliminata"));
-                        break;
-                    }
-                    */
 
                     case "addAnswer": {
                         String usernameOwner = (String) in.readObject();
@@ -423,6 +334,22 @@ public class ServerThread implements Runnable {
                         List<Recensione> lista = database.getReviewsForOwner(usernameRistoratore);
 
                         out.writeObject(new ServerResponse("OK", lista));
+                        break;
+                    }
+
+                    case "getMyReviews": {
+                        String username = (String) in.readObject();
+                        List<Recensione> lista = database.getMyReviews(username);
+
+                        out.writeObject(new ServerResponse("OK", lista));
+                        break;
+                    }
+
+                    case "getMyReviewRestaurantNames": {
+                        String username = (String) in.readObject();
+                        List<String> nomi = database.getMyReviewRestaurantNames(username);
+                        
+                        out.writeObject(new ServerResponse("OK", nomi));
                         break;
                     }
 

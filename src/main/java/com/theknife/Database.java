@@ -279,30 +279,6 @@ public class Database {
         }
     }
 
-    /* // VECCHIO CODICE
-    public List<Ristorante> searchRestaurants(String filtro) {
-        List<Ristorante> lista = new ArrayList<>();
-
-        try {
-            PreparedStatement ps = connection.prepareStatement(
-                    "SELECT * FROM ristoranti WHERE LOWER(nome) LIKE LOWER(?) OR LOWER(citta) LIKE LOWER(?)");
-            ps.setString(1, "%" + filtro + "%");
-            ps.setString(2, "%" + filtro + "%");
-
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                lista.add(buildRestaurantFromResultSet(rs));
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return lista;
-    }
-    */
-
     public List<Ristorante> searchRestaurants(
             String nome,
             String citta,
@@ -507,12 +483,15 @@ public class Database {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                lista.add(new Recensione(
+                Recensione r = new Recensione(
                         rs.getInt("id"),
                         rs.getInt("id_utente"),
                         rs.getInt("stelle"),
                         rs.getString("testo"),
-                        rs.getString("risposta")));
+                        rs.getString("risposta")
+                );
+                r.setIdRistorante(rs.getInt("id_ristorante"));
+                lista.add(r);
             }
 
         } catch (SQLException e) {
@@ -527,21 +506,26 @@ public class Database {
 
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "SELECT rec.id, rec.id_utente, rec.stelle, rec.testo, rec.risposta " +
-                            "FROM recensioni rec " +
-                            "JOIN ristoranti r ON r.id = rec.id_ristorante " +
-                            "WHERE r.id_ristoratore=(SELECT id FROM utenti WHERE username=?)");
+                "SELECT rec.id, rec.id_ristorante, rec.id_utente, rec.stelle, rec.testo, rec.risposta " +
+                "FROM recensioni rec " +
+                "JOIN ristoranti r ON r.id = rec.id_ristorante " +
+                "WHERE r.id_ristoratore=(SELECT id FROM utenti WHERE username=?) " +
+                "ORDER BY rec.id DESC"
+            );
             ps.setString(1, usernameRistoratore);
 
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                lista.add(new Recensione(
-                        rs.getInt("id"),
-                        rs.getInt("id_utente"),
-                        rs.getInt("stelle"),
-                        rs.getString("testo"),
-                        rs.getString("risposta")));
+                Recensione rec = new Recensione(
+                    rs.getInt("id"),
+                    rs.getInt("id_utente"),
+                    rs.getInt("stelle"),
+                    rs.getString("testo"),
+                    rs.getString("risposta")
+                );
+                rec.setIdRistorante(rs.getInt("id_ristorante"));
+                lista.add(rec);
             }
 
         } catch (SQLException e) {
@@ -552,38 +536,38 @@ public class Database {
         return lista;
     }
 
-    /*
-    public void addAnswer(String username, int idRistorante, String risposta) {
+    public List<Recensione> getMyReviews(String username) {
+        List<Recensione> lista = new ArrayList<>();
+
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "UPDATE recensioni SET risposta=? WHERE id_utente=(SELECT id FROM utenti WHERE username=?) AND id_ristorante=?");
-            ps.setString(1, risposta);
-            ps.setString(2, username);
-            ps.setInt(3, idRistorante);
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("[DB] Errore addAnswer: " + e.getMessage());
-        }
-    }
-    
-    public void deleteAnswer(String username, int idRistorante) {
-        try {
-            PreparedStatement ps = connection.prepareStatement(
-                    "UPDATE recensioni SET risposta=NULL WHERE id_utente=(SELECT id FROM utenti WHERE username=?) AND id_ristorante=?");
+                "SELECT rec.id, rec.id_ristorante, rec.id_utente, rec.stelle, rec.testo, rec.risposta " +
+                "FROM recensioni rec " +
+                "WHERE rec.id_utente=(SELECT id FROM utenti WHERE username=?) " +
+                "ORDER BY rec.id DESC"
+            );
             ps.setString(1, username);
-            ps.setInt(2, idRistorante);
 
-            ps.executeUpdate();
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Recensione r = new Recensione(
+                    rs.getInt("id"),
+                    rs.getInt("id_utente"),
+                    rs.getInt("stelle"),
+                    rs.getString("testo"),
+                    rs.getString("risposta")
+                );
+                r.setIdRistorante(rs.getInt("id_ristorante"));
+                lista.add(r);
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("[DB] Errore deleteAnswer: " + e.getMessage());
+            System.out.println("[DB] Errore getMyReviews: " + e.getMessage());
         }
+
+        return lista;
     }
-    */
 
     public void addAnswer(String usernameOwner, int idRecensione, String risposta) {
         try {
@@ -638,13 +622,15 @@ public class Database {
             ResultSet rs = ps.executeQuery();
             if (!rs.next()) return null;
 
-            return new Recensione(
+            Recensione r = new Recensione(
                 rs.getInt("id"),
                 rs.getInt("id_utente"),
                 rs.getInt("stelle"),
                 rs.getString("testo"),
                 rs.getString("risposta")
             );
+            r.setIdRistorante(rs.getInt("id_ristorante"));
+            return r;
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -674,6 +660,32 @@ public class Database {
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("[DB] Errore getReviewUsernames: " + e.getMessage());
+        }
+
+        return lista;
+    }
+
+    public List<String> getMyReviewRestaurantNames(String username) {
+        List<String> lista = new ArrayList<>();
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                "SELECT r.nome " +
+                "FROM recensioni rec " +
+                "JOIN ristoranti r ON r.id = rec.id_ristorante " +
+                "WHERE rec.id_utente=(SELECT id FROM utenti WHERE username=?) " +
+                "ORDER BY rec.id DESC"
+            );
+            ps.setString(1, username);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                lista.add(rs.getString("nome"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore getMyReviewRestaurantNames: " + e.getMessage());
         }
 
         return lista;
@@ -716,13 +728,6 @@ public class Database {
             ps.setString(2, username);
 
             ps.executeUpdate();
-
-            // int rows = ps.executeUpdate();
-            // if (rows == 0) { // o username non esiste, oppure era già preferito (con DO
-            // NOTHING)
-            // System.out.println("[DB] Nessun inserimento: utente inesistente o preferito
-            // già presente.");
-            // }
 
         } catch (SQLException e) {
             e.printStackTrace();

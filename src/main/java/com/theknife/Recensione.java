@@ -6,6 +6,7 @@ public class Recensione implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int id;
+    private int idRistorante;
     private int idUtente;
     private int stelle;
     private String testo;
@@ -23,6 +24,14 @@ public class Recensione implements Serializable {
         return id;
     }
 
+    public int getIdRistorante() {
+        return idRistorante;
+    }
+
+    public void setIdRistorante(int idRistorante) {
+        this.idRistorante = idRistorante;
+    }
+
     public int getIdUtente() {
         return idUtente;
     }
@@ -37,6 +46,10 @@ public class Recensione implements Serializable {
 
     public String getRisposta() {
         return risposta;
+    }
+
+    public void setRisposta(String risposta) {
+        this.risposta = risposta;
     }
 
     @Override
