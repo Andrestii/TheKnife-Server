@@ -178,10 +178,10 @@ public class ServerThread implements Runnable {
                         Integer prezzoMax = (Integer) in.readObject();
                         Boolean delivery = (Boolean) in.readObject();
                         Boolean prenotazione = (Boolean) in.readObject();
-                        // Manca ricerca per valutazione media stelle
+                        Double votoMin = (Double) in.readObject();
 
                         List<Ristorante> lista = database.searchRestaurants(
-                                nome, citta, tipoCucina, prezzoMin, prezzoMax, delivery, prenotazione);
+                                nome, citta, tipoCucina, prezzoMin, prezzoMax, delivery, prenotazione, votoMin);
 
                         out.writeObject(new ServerResponse("OK", lista));
                         System.out.println("Risultati della ricerca inviati al client. Numero ris: " + lista.size());

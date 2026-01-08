@@ -286,48 +286,46 @@ public class Database {
             Integer prezzoMin,
             Integer prezzoMax,
             Boolean delivery,
-            Boolean prenotazione) {
+            Boolean prenotazione,
+            Double votoMin
+    ) {
 
         List<Ristorante> lista = new ArrayList<>();
-        String query = "SELECT * FROM ristoranti WHERE 1=1 ";
 
-        if (nome != null)
-            query += " AND LOWER(nome) LIKE LOWER(?) ";
-        if (citta != null)
-            query += " AND LOWER(citta) LIKE LOWER(?) ";
-        if (tipoCucina != null)
-            query += " AND LOWER(tipo_cucina) = LOWER(?) ";
-        if (prezzoMin != null)
-            query += " AND prezzo >= ? ";
-        if (prezzoMax != null)
-            query += " AND prezzo <= ? ";
-        if (delivery != null)
-            query += " AND delivery = ? ";
-        if (prenotazione != null)
-            query += " AND prenotazione = ? ";
+        String query =
+            "SELECT r.* " +
+            "FROM ristoranti r " +
+            "LEFT JOIN ( " +
+            "   SELECT id_ristorante, AVG(stelle) AS media " +
+            "   FROM recensioni " +
+            "   GROUP BY id_ristorante " +
+            ") a ON a.id_ristorante = r.id " +
+            "WHERE 1=1 ";
+
+        if (nome != null)         query += " AND LOWER(r.nome) LIKE LOWER(?) ";
+        if (citta != null)        query += " AND LOWER(r.citta) LIKE LOWER(?) ";
+        if (tipoCucina != null)   query += " AND LOWER(r.tipo_cucina) = LOWER(?) ";
+        if (prezzoMin != null)    query += " AND r.prezzo >= ? ";
+        if (prezzoMax != null)    query += " AND r.prezzo <= ? ";
+        if (delivery != null)     query += " AND r.delivery = ? ";
+        if (prenotazione != null) query += " AND r.prenotazione = ? ";
+        if (votoMin != null)      query += " AND COALESCE(a.media, 0) >= ? ";
 
         try {
             PreparedStatement ps = connection.prepareStatement(query);
             int idx = 1;
 
-            if (nome != null)
-                ps.setString(idx++, "%" + nome + "%");
-            if (citta != null)
-                ps.setString(idx++, "%" + citta + "%");
-            if (tipoCucina != null)
-                ps.setString(idx++, tipoCucina);
-            if (prezzoMin != null)
-                ps.setInt(idx++, prezzoMin);
-            if (prezzoMax != null)
-                ps.setInt(idx++, prezzoMax);
-            if (delivery != null)
-                ps.setBoolean(idx++, delivery);
-            if (prenotazione != null)
-                ps.setBoolean(idx++, prenotazione);
+            if (nome != null)         ps.setString(idx++, "%" + nome + "%");
+            if (citta != null)        ps.setString(idx++, "%" + citta + "%");
+            if (tipoCucina != null)   ps.setString(idx++, tipoCucina);
+            if (prezzoMin != null)    ps.setInt(idx++, prezzoMin);
+            if (prezzoMax != null)    ps.setInt(idx++, prezzoMax);
+            if (delivery != null)     ps.setBoolean(idx++, delivery);
+            if (prenotazione != null) ps.setBoolean(idx++, prenotazione);
+            if (votoMin != null)      ps.setDouble(idx++, votoMin);
 
             ResultSet rs = ps.executeQuery();
-
-            while (rs.next())
+            while (rs.next()) 
                 lista.add(buildRestaurantFromResultSet(rs));
 
         } catch (SQLException e) {
