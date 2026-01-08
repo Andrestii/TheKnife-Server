@@ -214,9 +214,9 @@ public class ServerThread implements Runnable {
                         String username = (String) in.readObject();
                         Integer idRistorante = (Integer) in.readObject();
 
-                        boolean owner = database.isOwnerOfRestaurant(username, idRistorante);
+                        boolean isOwner = database.isOwnerOfRestaurant(username, idRistorante);
 
-                        out.writeObject(new ServerResponse("OK", owner));
+                        out.writeObject(new ServerResponse("OK", isOwner));
                         out.flush();
                         break;
                     }
@@ -332,6 +332,7 @@ public class ServerThread implements Runnable {
                         break;
                     }
 
+                    /*
                     case "answerReview": { // Solo il proprietario del ristorante può rispondere
                         String usernameRistoratore = (String) in.readObject();
                         String usernameCliente = (String) in.readObject(); // Username del cliente che ha scritto la recensione
@@ -363,6 +364,26 @@ public class ServerThread implements Runnable {
                         }
 
                         database.deleteAnswer(usernameCliente, idRistorante);
+                        out.writeObject(new ServerResponse("OK", "Risposta eliminata"));
+                        break;
+                    }
+                    */
+
+                    case "addAnswer": {
+                        String usernameOwner = (String) in.readObject();
+                        int idRec = (int) in.readObject();
+                        String risposta = (String) in.readObject();
+
+                        database.addAnswer(usernameOwner, idRec, risposta);
+                        out.writeObject(new ServerResponse("OK", "Risposta salvata"));
+                        break;
+                    }
+
+                    case "deleteAnswer": {
+                        String usernameOwner = (String) in.readObject();
+                        int idRec = (int) in.readObject();
+
+                        database.deleteAnswer(usernameOwner, idRec);
                         out.writeObject(new ServerResponse("OK", "Risposta eliminata"));
                         break;
                     }

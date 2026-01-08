@@ -552,6 +552,7 @@ public class Database {
         return lista;
     }
 
+    /*
     public void addAnswer(String username, int idRistorante, String risposta) {
         try {
             PreparedStatement ps = connection.prepareStatement(
@@ -580,6 +581,46 @@ public class Database {
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("[DB] Errore deleteAnswer: " + e.getMessage());
+        }
+    }
+    */
+
+    public void addAnswer(String usernameOwner, int idRecensione, String risposta) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                "UPDATE recensioni rec " +
+                "SET risposta=? " +
+                "FROM ristoranti r " +
+                "WHERE rec.id=? AND r.id=rec.id_ristorante " +
+                "AND r.id_ristoratore=(SELECT id FROM utenti WHERE username=?)"
+            );
+            ps.setString(1, risposta);
+            ps.setInt(2, idRecensione);
+            ps.setString(3, usernameOwner);
+            int updated = ps.executeUpdate();
+            if (updated == 0) System.out.println("[DB] addAnswerByReviewId: nessun record aggiornato (non owner o id errato)");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore addAnswerByReviewId: " + e.getMessage());
+        }
+    }
+
+    public void deleteAnswer(String usernameOwner, int idRecensione) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                "UPDATE recensioni rec " +
+                "SET risposta=NULL " +
+                "FROM ristoranti r " +
+                "WHERE rec.id=? AND r.id=rec.id_ristorante " +
+                "AND r.id_ristoratore=(SELECT id FROM utenti WHERE username=?)"
+            );
+            ps.setInt(1, idRecensione);
+            ps.setString(2, usernameOwner);
+            int updated = ps.executeUpdate();
+            if (updated == 0) System.out.println("[DB] deleteAnswerByReviewId: nessun record aggiornato (non owner o id errato)");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore deleteAnswerByReviewId: " + e.getMessage());
         }
     }
 
