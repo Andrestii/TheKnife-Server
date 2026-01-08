@@ -372,6 +372,27 @@ public class Database {
                 rs.getString("id_ristoratore"));
     }
 
+    public double getRestaurantAvgRating(int idRistorante) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                "SELECT COALESCE(AVG(stelle), 0) AS media " +
+                "FROM recensioni " +
+                "WHERE id_ristorante = ?"
+            );
+            ps.setInt(1, idRistorante);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getDouble("media");
+            return 0.0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore getRestaurantAvgRating: " + e.getMessage());
+            return 0.0;
+        }
+    }
+
+
     // CONTROLLI E SUPPORTO
     public boolean isUsernameFree(String username) {
         try {

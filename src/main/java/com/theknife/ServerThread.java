@@ -170,16 +170,6 @@ public class ServerThread implements Runnable {
                         break;
                     }
 
-                    /* // VECCHIO CODICE
-                    case "searchRestaurants": {
-                        String filtro = (String) in.readObject();
-                        List<Ristorante> lista = database.searchRestaurants(filtro);
-
-                        out.writeObject(new ServerResponse("OK", lista));
-                        break;
-                    }
-                    */
-
                     case "searchRestaurants": {
                         String nome = (String) in.readObject();
                         String citta = (String) in.readObject();
@@ -217,6 +207,15 @@ public class ServerThread implements Runnable {
                         boolean isOwner = database.isOwnerOfRestaurant(username, idRistorante);
 
                         out.writeObject(new ServerResponse("OK", isOwner));
+                        out.flush();
+                        break;
+                    }
+
+                    case "getRestaurantAvgRating": {
+                        int idRistorante = (int) in.readObject();
+                        double media = database.getRestaurantAvgRating(idRistorante);
+
+                        out.writeObject(new ServerResponse("OK", media));
                         out.flush();
                         break;
                     }
@@ -348,7 +347,7 @@ public class ServerThread implements Runnable {
                     case "getMyReviewRestaurantNames": {
                         String username = (String) in.readObject();
                         List<String> nomi = database.getMyReviewRestaurantNames(username);
-                        
+
                         out.writeObject(new ServerResponse("OK", nomi));
                         break;
                     }
