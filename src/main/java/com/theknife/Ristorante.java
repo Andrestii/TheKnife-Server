@@ -51,7 +51,7 @@ public class Ristorante implements Serializable {
      * @param indirizzo     indirizzo
      * @param latitudine    latitudine
      * @param longitudine   longitudine
-     * @param prezzo        prezzo medio
+     * @param fasciaPrezzo  prezzo medio
      * @param delivery      true se offre delivery
      * @param prenotazione  true se supporta prenotazione online
      * @param tipoCucina    tipologia di cucina
