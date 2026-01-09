@@ -17,9 +17,12 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        System.out.println("Starting JavaFX app...");
         scene = new Scene(loadFXML("MenuServer"), 640, 480);
+        System.out.println("Scene created.");
         stage.setScene(scene);
         stage.show();
+        System.out.println("App started.");
     }
 
     static void setRoot(String fxml) throws IOException {
@@ -27,8 +30,18 @@ public class App extends Application {
     }
 
     private static Parent loadFXML(String fxml) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
-        return fxmlLoader.load();
+        System.out.println("Loading FXML: " + fxml);
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
+            System.out.println("FXMLLoader created, resource: " + fxmlLoader.getLocation());
+            Parent root = fxmlLoader.load();
+            System.out.println("FXML loaded successfully.");
+            return root;
+        } catch (Exception e) {
+            System.out.println("Error loading FXML: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     public static void main(String[] args) {
