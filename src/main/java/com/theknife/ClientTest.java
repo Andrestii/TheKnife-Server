@@ -1,3 +1,19 @@
+/**
+ * Autori del progetto:
+ *
+ * - Lorenzo De Paoli
+ *   Matricola: 753577
+ *   Sede: VA
+ *
+ * - Andrea Onesti
+ *   Matricola: 754771
+ *   Sede: VA
+ *
+ * - Weili Wu
+ *   Matricola: 752602
+ *   Sede: VA
+ */
+
 package com.theknife;
 
 import java.io.IOException;
@@ -47,7 +63,7 @@ public class ClientTest {
                 System.out.println("registerUser, login, searchRestaurants, addRestaurant, getRestaurantDetails, addReview, viewReviews, exit");
                 command = scanner.nextLine();
 
-                out.writeObject(command); // invio comando
+                out.writeObject(command);
 
                 switch (command) {
 
