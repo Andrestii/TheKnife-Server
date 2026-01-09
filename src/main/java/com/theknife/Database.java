@@ -14,10 +14,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Gestisce l'accesso al database del server TheKnife.
+ * Fornisce metodi per la gestione di utenti, ristoranti,
+ * recensioni e preferiti tramite query SQL su database PostgreSQL.
+ */
 public class Database {
 
     private Connection connection;
 
+    /**
+     * Inizializza la connessione al database PostgreSQL.
+     *
+     * @param dbName     nome del database
+     * @param usernameDB username per l'autenticazione al DB
+     * @param passwordDB password per l'autenticazione al DB
+     */
     public Database(String dbName, String usernameDB, String passwordDB) {
         try {
             Class.forName("org.postgresql.Driver");
@@ -33,6 +45,18 @@ public class Database {
     }
 
     // UTENTI
+    /**
+     * Registra un nuovo utente nel sistema.
+     *
+     * @param nome         nome dell'utente
+     * @param cognome      cognome dell'utente
+     * @param username     username scelto
+     * @param password     password in chiaro (verrà cifrata)
+     * @param data_nascita data di nascita (formato yyyy-MM-dd)
+     * @param domicilio    domicilio dell'utente
+     * @param ruolo        ruolo dell'utente (cliente o ristoratore)
+     * @return true se la registrazione va a buon fine, false altrimenti
+     */
     public boolean registerUser(String nome, String cognome, String username,
             String password, String data_nascita, String domicilio, String ruolo) {
         try {
@@ -72,6 +96,13 @@ public class Database {
         }
     }
 
+    /**
+     * Verifica la validità delle credenziali di accesso di un utente.
+     *
+     * @param username username dell'utente
+     * @param password password in chiaro inserita
+     * @return true se le credenziali sono corrette, false altrimenti
+     */
     public boolean validateUser(String username, String password) { // Per login
         try {
             PreparedStatement ps = connection.prepareStatement(
@@ -84,7 +115,7 @@ public class Database {
 
             String storedHash = rs.getString("password");
             return PasswordUtil.verifyPassword(password, storedHash);
-            //return true; // PER TESTING SENZA PASSWORD
+            // return true; // PER TESTING SENZA PASSWORD
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -93,6 +124,18 @@ public class Database {
         }
     }
 
+    /**
+     * Aggiorna i dati personali di un utente.
+     *
+     * @param currentUsername username attuale dell'utente
+     * @param nome            nuovo nome
+     * @param cognome         nuovo cognome
+     * @param dataNascita     nuova data di nascita
+     * @param domicilio       nuovo domicilio
+     * @param newUsername     nuovo username
+     * @param newPassword     nuova password (opzionale)
+     * @return true se l'aggiornamento va a buon fine, false altrimenti
+     */
     public boolean updateUserInfo(String currentUsername, String nome, String cognome, String dataNascita,
             String domicilio, String newUsername, String newPassword) {
         try {
@@ -142,6 +185,13 @@ public class Database {
         }
     }
 
+    /**
+     * Recupera i dati di un utente registrato.
+     *
+     * @param username username dell'utente
+     * @return oggetto {@link Utente} con i dati dell'utente, oppure null se non
+     *         trovato
+     */
     public Utente getUserData(String username) {
         try {
             PreparedStatement ps = connection.prepareStatement(
@@ -169,6 +219,22 @@ public class Database {
     }
 
     // RISTORANTI
+    /**
+     * Aggiunge un nuovo ristorante associato a un ristoratore.
+     *
+     * @param nome                 nome del ristorante
+     * @param nazione              nazione
+     * @param citta                città
+     * @param indirizzo            indirizzo
+     * @param lat                  latitudine
+     * @param lon                  longitudine
+     * @param delivery             disponibilità servizio delivery
+     * @param prenotazione         disponibilità prenotazione online
+     * @param tipoCucina           tipologia di cucina
+     * @param prezzo               prezzo medio
+     * @param username_ristoratore username del ristoratore
+     * @return true se il ristorante viene aggiunto correttamente
+     */
     public boolean addRestaurant(String nome, String nazione, String citta, String indirizzo,
             double lat, double lon, boolean delivery, boolean prenotazione,
             String tipoCucina, int prezzo, String username_ristoratore) {
@@ -201,6 +267,12 @@ public class Database {
         }
     }
 
+    /**
+     * Restituisce l'elenco dei ristoranti di un ristoratore.
+     *
+     * @param usernameRistoratore username del ristoratore
+     * @return lista dei ristoranti gestiti
+     */
     public List<Ristorante> getMyRestaurants(String usernameRistoratore) {
         List<Ristorante> lista = new ArrayList<>();
 
@@ -222,13 +294,30 @@ public class Database {
         return lista;
     }
 
-    public boolean updateRestaurant(int id, String nome, String nazione, String citta, String indirizzo, double lat, double lon,
-                                    boolean delivery, boolean prenotazione, String tipoCucina, int prezzo) {
+    /**
+     * Aggiorna i dati di un ristorante esistente.
+     *
+     * @param id           identificativo del ristorante
+     * @param nome         nuovo nome
+     * @param nazione      nuova nazione
+     * @param citta        nuova città
+     * @param indirizzo    nuovo indirizzo
+     * @param lat          nuova latitudine
+     * @param lon          nuova longitudine
+     * @param delivery     nuovo stato delivery
+     * @param prenotazione nuovo stato prenotazione
+     * @param tipoCucina   nuova tipologia di cucina
+     * @param prezzo       nuovo prezzo medio
+     * @return true se l'aggiornamento va a buon fine
+     */
+    public boolean updateRestaurant(int id, String nome, String nazione, String citta, String indirizzo, double lat,
+            double lon,
+            boolean delivery, boolean prenotazione, String tipoCucina, int prezzo) {
         try {
-            // Controllo se esiste un duplicato con stesso nome, città e indirizzo, ma non lo stesso id
+            // Controllo se esiste un duplicato con stesso nome, città e indirizzo, ma non
+            // lo stesso id
             PreparedStatement check = connection.prepareStatement(
-                    "SELECT id FROM ristoranti WHERE LOWER(TRIM(nome)) = LOWER(TRIM(?)) AND LOWER(TRIM(citta)) = LOWER(TRIM(?)) AND LOWER(TRIM(indirizzo)) = LOWER(TRIM(?)) AND id <> ?"
-                );
+                    "SELECT id FROM ristoranti WHERE LOWER(TRIM(nome)) = LOWER(TRIM(?)) AND LOWER(TRIM(citta)) = LOWER(TRIM(?)) AND LOWER(TRIM(indirizzo)) = LOWER(TRIM(?)) AND id <> ?");
             check.setString(1, nome);
             check.setString(2, citta);
             check.setString(3, indirizzo);
@@ -241,8 +330,7 @@ public class Database {
             }
 
             PreparedStatement ps = connection.prepareStatement(
-                    "UPDATE ristoranti SET nome=?, nazione=?, citta=?, indirizzo=?, latitudine=?, longitudine=?, delivery=?, prenotazione=?, tipo_cucina=?, prezzo=? WHERE id=?"
-                );
+                    "UPDATE ristoranti SET nome=?, nazione=?, citta=?, indirizzo=?, latitudine=?, longitudine=?, delivery=?, prenotazione=?, tipo_cucina=?, prezzo=? WHERE id=?");
             ps.setString(1, nome);
             ps.setString(2, nazione);
             ps.setString(3, citta);
@@ -264,6 +352,12 @@ public class Database {
         }
     }
 
+    /**
+     * Elimina un ristorante dal sistema.
+     *
+     * @param id identificativo del ristorante
+     * @return true se l'eliminazione va a buon fine
+     */
     public boolean deleteRestaurant(int id) {
         try {
             PreparedStatement ps = connection.prepareStatement(
@@ -279,6 +373,19 @@ public class Database {
         }
     }
 
+    /**
+     * Effettua una ricerca avanzata di ristoranti in base a più filtri.
+     *
+     * @param nome         nome del ristorante
+     * @param citta        città
+     * @param tipoCucina   tipologia di cucina
+     * @param prezzoMin    prezzo minimo
+     * @param prezzoMax    prezzo massimo
+     * @param delivery     filtro delivery
+     * @param prenotazione filtro prenotazione
+     * @param votoMin      voto medio minimo
+     * @return lista dei ristoranti che soddisfano i criteri
+     */
     public List<Ristorante> searchRestaurants(
             String nome,
             String citta,
@@ -287,45 +394,59 @@ public class Database {
             Integer prezzoMax,
             Boolean delivery,
             Boolean prenotazione,
-            Double votoMin
-    ) {
+            Double votoMin) {
 
         List<Ristorante> lista = new ArrayList<>();
 
-        String query =
-            "SELECT r.* " +
-            "FROM ristoranti r " +
-            "LEFT JOIN ( " +
-            "   SELECT id_ristorante, AVG(stelle) AS media " +
-            "   FROM recensioni " +
-            "   GROUP BY id_ristorante " +
-            ") a ON a.id_ristorante = r.id " +
-            "WHERE 1=1 ";
+        String query = "SELECT r.* " +
+                "FROM ristoranti r " +
+                "LEFT JOIN ( " +
+                "   SELECT id_ristorante, AVG(stelle) AS media " +
+                "   FROM recensioni " +
+                "   GROUP BY id_ristorante " +
+                ") a ON a.id_ristorante = r.id " +
+                "WHERE 1=1 ";
 
-        if (nome != null)         query += " AND LOWER(r.nome) LIKE LOWER(?) ";
-        if (citta != null)        query += " AND LOWER(r.citta) LIKE LOWER(?) ";
-        if (tipoCucina != null)   query += " AND LOWER(r.tipo_cucina) = LOWER(?) ";
-        if (prezzoMin != null)    query += " AND r.prezzo >= ? ";
-        if (prezzoMax != null)    query += " AND r.prezzo <= ? ";
-        if (delivery != null)     query += " AND r.delivery = ? ";
-        if (prenotazione != null) query += " AND r.prenotazione = ? ";
-        if (votoMin != null)      query += " AND COALESCE(a.media, 0) >= ? ";
+        if (nome != null)
+            query += " AND LOWER(r.nome) LIKE LOWER(?) ";
+        if (citta != null)
+            query += " AND LOWER(r.citta) LIKE LOWER(?) ";
+        if (tipoCucina != null)
+            query += " AND LOWER(r.tipo_cucina) = LOWER(?) ";
+        if (prezzoMin != null)
+            query += " AND r.prezzo >= ? ";
+        if (prezzoMax != null)
+            query += " AND r.prezzo <= ? ";
+        if (delivery != null)
+            query += " AND r.delivery = ? ";
+        if (prenotazione != null)
+            query += " AND r.prenotazione = ? ";
+        if (votoMin != null)
+            query += " AND COALESCE(a.media, 0) >= ? ";
 
         try {
             PreparedStatement ps = connection.prepareStatement(query);
             int idx = 1;
 
-            if (nome != null)         ps.setString(idx++, "%" + nome + "%");
-            if (citta != null)        ps.setString(idx++, "%" + citta + "%");
-            if (tipoCucina != null)   ps.setString(idx++, tipoCucina);
-            if (prezzoMin != null)    ps.setInt(idx++, prezzoMin);
-            if (prezzoMax != null)    ps.setInt(idx++, prezzoMax);
-            if (delivery != null)     ps.setBoolean(idx++, delivery);
-            if (prenotazione != null) ps.setBoolean(idx++, prenotazione);
-            if (votoMin != null)      ps.setDouble(idx++, votoMin);
+            if (nome != null)
+                ps.setString(idx++, "%" + nome + "%");
+            if (citta != null)
+                ps.setString(idx++, "%" + citta + "%");
+            if (tipoCucina != null)
+                ps.setString(idx++, tipoCucina);
+            if (prezzoMin != null)
+                ps.setInt(idx++, prezzoMin);
+            if (prezzoMax != null)
+                ps.setInt(idx++, prezzoMax);
+            if (delivery != null)
+                ps.setBoolean(idx++, delivery);
+            if (prenotazione != null)
+                ps.setBoolean(idx++, prenotazione);
+            if (votoMin != null)
+                ps.setDouble(idx++, votoMin);
 
             ResultSet rs = ps.executeQuery();
-            while (rs.next()) 
+            while (rs.next())
                 lista.add(buildRestaurantFromResultSet(rs));
 
         } catch (SQLException e) {
@@ -336,6 +457,12 @@ public class Database {
         return lista;
     }
 
+    /**
+     * Recupera i dettagli completi di un ristorante.
+     *
+     * @param id identificativo del ristorante
+     * @return oggetto {@link Ristorante} oppure null se non trovato
+     */
     public Ristorante getRestaurantDetails(int id) {
         try {
             PreparedStatement ps = connection.prepareStatement(
@@ -370,17 +497,23 @@ public class Database {
                 rs.getString("id_ristoratore"));
     }
 
+    /**
+     * Calcola la valutazione media di un ristorante.
+     *
+     * @param idRistorante identificativo del ristorante
+     * @return media delle stelle
+     */
     public double getRestaurantAvgRating(int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "SELECT COALESCE(AVG(stelle), 0) AS media " +
-                "FROM recensioni " +
-                "WHERE id_ristorante = ?"
-            );
+                    "SELECT COALESCE(AVG(stelle), 0) AS media " +
+                            "FROM recensioni " +
+                            "WHERE id_ristorante = ?");
             ps.setInt(1, idRistorante);
 
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getDouble("media");
+            if (rs.next())
+                return rs.getDouble("media");
             return 0.0;
 
         } catch (SQLException e) {
@@ -390,8 +523,13 @@ public class Database {
         }
     }
 
-
     // CONTROLLI E SUPPORTO
+    /**
+     * Verifica se uno username è disponibile (non presente in tabella utenti).
+     *
+     * @param username username da controllare
+     * @return true se lo username non è presente nel database, false altrimenti
+     */
     public boolean isUsernameFree(String username) {
         try {
             PreparedStatement ps = connection.prepareStatement(
@@ -408,6 +546,15 @@ public class Database {
         }
     }
 
+    /**
+     * Verifica se un utente (ristoratore) è proprietario di un determinato
+     * ristorante.
+     *
+     * @param username     username del ristoratore
+     * @param idRistorante identificativo del ristorante
+     * @return true se l'utente risulta proprietario del ristorante, false
+     *         altrimenti
+     */
     public boolean isOwnerOfRestaurant(String username, int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
@@ -425,6 +572,15 @@ public class Database {
         }
     }
 
+    /**
+     * Controlla se un utente ha già inserito una recensione per un determinato
+     * ristorante.
+     *
+     * @param username     username dell'utente
+     * @param idRistorante identificativo del ristorante
+     * @return true se esiste già una recensione dell'utente per quel ristorante,
+     *         false altrimenti
+     */
     public boolean hasUserAlreadyReviewed(String username, int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
@@ -443,6 +599,14 @@ public class Database {
     }
 
     // RECENSIONI
+    /**
+     * Aggiunge una nuova recensione a un ristorante.
+     *
+     * @param idRistorante identificativo del ristorante
+     * @param username     username dell'utente
+     * @param stelle       valutazione (1–5)
+     * @param testo        testo della recensione
+     */
     public void addReview(int idRistorante, String username, int stelle, String testo) {
         try {
             PreparedStatement ps = connection.prepareStatement(
@@ -461,6 +625,14 @@ public class Database {
         }
     }
 
+    /**
+     * Modifica una recensione esistente.
+     *
+     * @param idRistorante identificativo del ristorante
+     * @param username     username dell'utente
+     * @param stelle       nuova valutazione
+     * @param testo        nuovo testo
+     */
     public void editReview(int idRistorante, String username, int stelle, String testo) {
         try {
             PreparedStatement ps = connection.prepareStatement(
@@ -477,6 +649,12 @@ public class Database {
         }
     }
 
+    /**
+     * Elimina una recensione effettuata da un utente.
+     *
+     * @param username     username dell'utente
+     * @param idRistorante identificativo del ristorante
+     */
     public void deleteReview(String username, int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
@@ -491,6 +669,12 @@ public class Database {
         }
     }
 
+    /**
+     * Restituisce tutte le recensioni di un ristorante.
+     *
+     * @param idRistorante identificativo del ristorante
+     * @return lista delle recensioni
+     */
     public List<Recensione> getReviews(int idRistorante) {
         List<Recensione> lista = new ArrayList<>();
 
@@ -507,8 +691,7 @@ public class Database {
                         rs.getInt("id_utente"),
                         rs.getInt("stelle"),
                         rs.getString("testo"),
-                        rs.getString("risposta")
-                );
+                        rs.getString("risposta"));
                 r.setIdRistorante(rs.getInt("id_ristorante"));
                 lista.add(r);
             }
@@ -520,29 +703,33 @@ public class Database {
         return lista;
     }
 
+    /**
+     * Restituisce tutte le recensioni ricevute dai ristoranti di un ristoratore.
+     *
+     * @param usernameRistoratore username del ristoratore
+     * @return lista delle recensioni
+     */
     public List<Recensione> getReviewsForOwner(String usernameRistoratore) {
         List<Recensione> lista = new ArrayList<>();
 
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "SELECT rec.id, rec.id_ristorante, rec.id_utente, rec.stelle, rec.testo, rec.risposta " +
-                "FROM recensioni rec " +
-                "JOIN ristoranti r ON r.id = rec.id_ristorante " +
-                "WHERE r.id_ristoratore=(SELECT id FROM utenti WHERE username=?) " +
-                "ORDER BY rec.id DESC"
-            );
+                    "SELECT rec.id, rec.id_ristorante, rec.id_utente, rec.stelle, rec.testo, rec.risposta " +
+                            "FROM recensioni rec " +
+                            "JOIN ristoranti r ON r.id = rec.id_ristorante " +
+                            "WHERE r.id_ristoratore=(SELECT id FROM utenti WHERE username=?) " +
+                            "ORDER BY rec.id DESC");
             ps.setString(1, usernameRistoratore);
 
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
                 Recensione rec = new Recensione(
-                    rs.getInt("id"),
-                    rs.getInt("id_utente"),
-                    rs.getInt("stelle"),
-                    rs.getString("testo"),
-                    rs.getString("risposta")
-                );
+                        rs.getInt("id"),
+                        rs.getInt("id_utente"),
+                        rs.getInt("stelle"),
+                        rs.getString("testo"),
+                        rs.getString("risposta"));
                 rec.setIdRistorante(rs.getInt("id_ristorante"));
                 lista.add(rec);
             }
@@ -555,27 +742,31 @@ public class Database {
         return lista;
     }
 
+    /**
+     * Restituisce tutte le recensioni scritte da un utente.
+     *
+     * @param username username dell'utente
+     * @return lista delle recensioni
+     */
     public List<Recensione> getMyReviews(String username) {
         List<Recensione> lista = new ArrayList<>();
 
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "SELECT rec.id, rec.id_ristorante, rec.id_utente, rec.stelle, rec.testo, rec.risposta " +
-                "FROM recensioni rec " +
-                "WHERE rec.id_utente=(SELECT id FROM utenti WHERE username=?) " +
-                "ORDER BY rec.id DESC"
-            );
+                    "SELECT rec.id, rec.id_ristorante, rec.id_utente, rec.stelle, rec.testo, rec.risposta " +
+                            "FROM recensioni rec " +
+                            "WHERE rec.id_utente=(SELECT id FROM utenti WHERE username=?) " +
+                            "ORDER BY rec.id DESC");
             ps.setString(1, username);
 
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Recensione r = new Recensione(
-                    rs.getInt("id"),
-                    rs.getInt("id_utente"),
-                    rs.getInt("stelle"),
-                    rs.getString("testo"),
-                    rs.getString("risposta")
-                );
+                        rs.getInt("id"),
+                        rs.getInt("id_utente"),
+                        rs.getInt("stelle"),
+                        rs.getString("testo"),
+                        rs.getString("risposta"));
                 r.setIdRistorante(rs.getInt("id_ristorante"));
                 lista.add(r);
             }
@@ -588,66 +779,91 @@ public class Database {
         return lista;
     }
 
+    /**
+     * Aggiunge (o aggiorna) la risposta del ristoratore a una recensione.
+     * L'operazione è consentita solo se il ristoratore è proprietario del
+     * ristorante
+     * associato alla recensione.
+     *
+     * @param usernameOwner username del ristoratore proprietario
+     * @param idRecensione  identificativo della recensione
+     * @param risposta      testo della risposta
+     */
     public void addAnswer(String usernameOwner, int idRecensione, String risposta) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "UPDATE recensioni rec " +
-                "SET risposta=? " +
-                "FROM ristoranti r " +
-                "WHERE rec.id=? AND r.id=rec.id_ristorante " +
-                "AND r.id_ristoratore=(SELECT id FROM utenti WHERE username=?)"
-            );
+                    "UPDATE recensioni rec " +
+                            "SET risposta=? " +
+                            "FROM ristoranti r " +
+                            "WHERE rec.id=? AND r.id=rec.id_ristorante " +
+                            "AND r.id_ristoratore=(SELECT id FROM utenti WHERE username=?)");
             ps.setString(1, risposta);
             ps.setInt(2, idRecensione);
             ps.setString(3, usernameOwner);
             int updated = ps.executeUpdate();
-            if (updated == 0) System.out.println("[DB] addAnswerByReviewId: nessun record aggiornato (non owner o id errato)");
+            if (updated == 0)
+                System.out.println("[DB] addAnswerByReviewId: nessun record aggiornato (non owner o id errato)");
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("[DB] Errore addAnswerByReviewId: " + e.getMessage());
         }
     }
 
+    /**
+     * Elimina la risposta del ristoratore da una recensione (impostandola a NULL).
+     * L'operazione è consentita solo se il ristoratore è proprietario del
+     * ristorante
+     * associato alla recensione.
+     *
+     * @param usernameOwner username del ristoratore proprietario
+     * @param idRecensione  identificativo della recensione
+     */
     public void deleteAnswer(String usernameOwner, int idRecensione) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "UPDATE recensioni rec " +
-                "SET risposta=NULL " +
-                "FROM ristoranti r " +
-                "WHERE rec.id=? AND r.id=rec.id_ristorante " +
-                "AND r.id_ristoratore=(SELECT id FROM utenti WHERE username=?)"
-            );
+                    "UPDATE recensioni rec " +
+                            "SET risposta=NULL " +
+                            "FROM ristoranti r " +
+                            "WHERE rec.id=? AND r.id=rec.id_ristorante " +
+                            "AND r.id_ristoratore=(SELECT id FROM utenti WHERE username=?)");
             ps.setInt(1, idRecensione);
             ps.setString(2, usernameOwner);
             int updated = ps.executeUpdate();
-            if (updated == 0) System.out.println("[DB] deleteAnswerByReviewId: nessun record aggiornato (non owner o id errato)");
+            if (updated == 0)
+                System.out.println("[DB] deleteAnswerByReviewId: nessun record aggiornato (non owner o id errato)");
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("[DB] Errore deleteAnswerByReviewId: " + e.getMessage());
         }
     }
 
+    /**
+     * Recupera la recensione di un utente per uno specifico ristorante.
+     *
+     * @param username     username dell'utente
+     * @param idRistorante identificativo del ristorante
+     * @return recensione trovata oppure null
+     */
     public Recensione getMyReview(String username, int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "SELECT * FROM recensioni " +
-                "WHERE id_utente = (SELECT id FROM utenti WHERE username=?) " +
-                "AND id_ristorante=? " +
-                "LIMIT 1;"
-            );
+                    "SELECT * FROM recensioni " +
+                            "WHERE id_utente = (SELECT id FROM utenti WHERE username=?) " +
+                            "AND id_ristorante=? " +
+                            "LIMIT 1;");
             ps.setString(1, username);
             ps.setInt(2, idRistorante);
 
             ResultSet rs = ps.executeQuery();
-            if (!rs.next()) return null;
+            if (!rs.next())
+                return null;
 
             Recensione r = new Recensione(
-                rs.getInt("id"),
-                rs.getInt("id_utente"),
-                rs.getInt("stelle"),
-                rs.getString("testo"),
-                rs.getString("risposta")
-            );
+                    rs.getInt("id"),
+                    rs.getInt("id_utente"),
+                    rs.getInt("stelle"),
+                    rs.getString("testo"),
+                    rs.getString("risposta"));
             r.setIdRistorante(rs.getInt("id_ristorante"));
             return r;
 
@@ -658,17 +874,23 @@ public class Database {
         }
     }
 
+    /**
+     * Restituisce la lista degli username degli utenti che hanno recensito un
+     * ristorante.
+     *
+     * @param idRistorante identificativo del ristorante
+     * @return lista di username ordinata per recensioni più recenti
+     */
     public List<String> getReviewUsernames(int idRistorante) {
         List<String> lista = new ArrayList<>();
 
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "SELECT u.username " +
-                "FROM recensioni rec " +
-                "JOIN utenti u ON u.id = rec.id_utente " +
-                "WHERE rec.id_ristorante = ? " +
-                "ORDER BY rec.id DESC"
-            );
+                    "SELECT u.username " +
+                            "FROM recensioni rec " +
+                            "JOIN utenti u ON u.id = rec.id_utente " +
+                            "WHERE rec.id_ristorante = ? " +
+                            "ORDER BY rec.id DESC");
             ps.setInt(1, idRistorante);
 
             ResultSet rs = ps.executeQuery();
@@ -684,17 +906,22 @@ public class Database {
         return lista;
     }
 
+    /**
+     * Restituisce i nomi dei ristoranti che sono stati recensiti da un utente.
+     *
+     * @param username username dell'utente
+     * @return lista dei nomi dei ristoranti recensiti
+     */
     public List<String> getMyReviewRestaurantNames(String username) {
         List<String> lista = new ArrayList<>();
 
         try {
             PreparedStatement ps = connection.prepareStatement(
-                "SELECT r.nome " +
-                "FROM recensioni rec " +
-                "JOIN ristoranti r ON r.id = rec.id_ristorante " +
-                "WHERE rec.id_utente=(SELECT id FROM utenti WHERE username=?) " +
-                "ORDER BY rec.id DESC"
-            );
+                    "SELECT r.nome " +
+                            "FROM recensioni rec " +
+                            "JOIN ristoranti r ON r.id = rec.id_ristorante " +
+                            "WHERE rec.id_utente=(SELECT id FROM utenti WHERE username=?) " +
+                            "ORDER BY rec.id DESC");
             ps.setString(1, username);
 
             ResultSet rs = ps.executeQuery();
@@ -710,8 +937,17 @@ public class Database {
         return lista;
     }
 
-
     // RIEPILOGO RISTORATORE
+    /**
+     * Restituisce un riepilogo dei ristoranti di un ristoratore con statistiche
+     * aggregate.
+     * Per ogni ristorante vengono calcolati media delle stelle e numero di
+     * recensioni.
+     *
+     * @param ownerId identificativo del ristoratore (id in tabella utenti)
+     * @return lista di righe (mappa chiave/valore) contenenti id, nome,
+     *         media_stelle e num_recensioni
+     */
     public List<HashMap<String, Object>> getRestaurantSummary(int ownerId) {
         try {
             PreparedStatement ps = connection.prepareStatement(
@@ -735,6 +971,12 @@ public class Database {
     }
 
     // PREFERITI
+    /**
+     * Aggiunge un ristorante ai preferiti di un utente.
+     *
+     * @param username     username dell'utente
+     * @param idRistorante identificativo del ristorante
+     */
     public void addFavorite(String username, int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
@@ -754,6 +996,12 @@ public class Database {
         }
     }
 
+    /**
+     * Rimuove un ristorante dai preferiti di un utente.
+     *
+     * @param username     username dell'utente
+     * @param idRistorante identificativo del ristorante
+     */
     public void removeFavorite(String username, int idRistorante) {
         try {
             PreparedStatement ps = connection.prepareStatement(
@@ -771,6 +1019,12 @@ public class Database {
         }
     }
 
+    /**
+     * Restituisce la lista dei ristoranti preferiti di un utente.
+     *
+     * @param username username dell'utente
+     * @return lista dei ristoranti preferiti
+     */
     public List<Ristorante> listFavorites(String username) {
         List<Ristorante> lista = new ArrayList<>();
 
@@ -791,30 +1045,43 @@ public class Database {
         return lista;
     }
 
+    /**
+     * Verifica se un ristorante è presente tra i preferiti di un utente.
+     *
+     * @param username     username dell'utente
+     * @param idRistorante identificativo del ristorante
+     * @return true se il ristorante è tra i preferiti
+     */
     public boolean isFavorite(String username, int idRistorante) {
-    try {
-        PreparedStatement ps = connection.prepareStatement(
-            "SELECT 1 " +
-            "FROM preferiti p " +
-            "WHERE p.id_utente = (SELECT id FROM utenti WHERE username = ?) " +
-            "AND p.id_ristorante = ? " +
-            "LIMIT 1;"
-        );
-        ps.setString(1, username);
-        ps.setInt(2, idRistorante);
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    "SELECT 1 " +
+                            "FROM preferiti p " +
+                            "WHERE p.id_utente = (SELECT id FROM utenti WHERE username = ?) " +
+                            "AND p.id_ristorante = ? " +
+                            "LIMIT 1;");
+            ps.setString(1, username);
+            ps.setInt(2, idRistorante);
 
-        ResultSet rs = ps.executeQuery();
-        return rs.next();
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
 
-    } catch (SQLException e) {
-        e.printStackTrace();
-        System.out.println("[DB] Errore isFavorite: " + e.getMessage());
-        return false;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("[DB] Errore isFavorite: " + e.getMessage());
+            return false;
+        }
     }
-}
-
 
     // UTILITY
+    /**
+     * Converte un {@link ResultSet} in una lista di mappe chiave/valore.
+     * Ogni riga del result set viene trasformata in una {@link HashMap} dove
+     * la chiave è il nome della colonna e il valore è l'oggetto corrispondente.
+     *
+     * @param rs result set da convertire
+     * @return lista di righe convertite in mappe
+     */
     public List<HashMap<String, Object>> resultSetToList(ResultSet rs) {
         List<HashMap<String, Object>> list = new ArrayList<>();
 

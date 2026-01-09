@@ -2,6 +2,13 @@ package com.theknife;
 
 import java.io.Serializable;
 
+/**
+ * Modello dati che rappresenta un ristorante presente nel sistema.
+ * <p>
+ * Include informazioni anagrafiche/di localizzazione, servizi disponibili
+ * (delivery/prenotazione) e riferimento al ristoratore proprietario.
+ * </p>
+ */
 public class Ristorante implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -16,12 +23,29 @@ public class Ristorante implements Serializable {
     private boolean delivery;
     private boolean prenotazione;
     private String tipoCucina;
-    private String idRistoratore; 
+    private String idRistoratore;
 
+    /**
+     * Crea un nuovo ristorante con i dati forniti.
+     *
+     * @param id            identificativo del ristorante
+     * @param nome          nome del ristorante
+     * @param nazione       nazione
+     * @param citta         città
+     * @param indirizzo     indirizzo
+     * @param latitudine    latitudine
+     * @param longitudine   longitudine
+     * @param prezzo        prezzo medio
+     * @param delivery      true se offre delivery
+     * @param prenotazione  true se supporta prenotazione online
+     * @param tipoCucina    tipologia di cucina
+     * @param idRistoratore identificativo/username del ristoratore proprietario (in
+     *                      base al tuo modello)
+     */
     public Ristorante(int id, String nome, String nazione, String citta, String indirizzo,
-                    double latitudine, double longitudine, int fasciaPrezzo,
-                    boolean delivery, boolean prenotazione, String tipoCucina,
-                    String idRistoratore) {
+            double latitudine, double longitudine, int fasciaPrezzo,
+            boolean delivery, boolean prenotazione, String tipoCucina,
+            String idRistoratore) {
 
         this.id = id;
         this.nome = nome;

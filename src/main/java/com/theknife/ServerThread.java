@@ -5,22 +5,63 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.List;
 
+/**
+ * Thread dedicato alla gestione di un singolo client connesso al server
+ * TheKnife.
+ * <p>
+ * La comunicazione avviene tramite {@link ObjectInputStream} e
+ * {@link ObjectOutputStream}:
+ * il client invia un comando (String) seguito dagli eventuali parametri, e il
+ * server risponde
+ * con un oggetto {@link ServerResponse} contenente uno status ("OK"/"ERROR") e
+ * un eventuale payload.
+ * </p>
+ *
+ * <p>
+ * Comandi gestiti (principali):
+ * registerUser, login, updateUserInfo,
+ * addRestaurant, getMyRestaurants, updateRestaurant, deleteRestaurant,
+ * searchRestaurants,
+ * getRestaurantDetails, isOwnerOfRestaurant, getRestaurantAvgRating,
+ * addReview, editReview, deleteReview, viewReviews, addAnswer, deleteAnswer,
+ * hasReviewed, getMyReview, viewReviewUsernames, getReviewsForOwner,
+ * getMyReviews,
+ * getMyReviewRestaurantNames, getRestaurantSummary,
+ * addFavorite, removeFavorite, listFavorites, isFavorite.
+ * </p>
+ */
 public class ServerThread implements Runnable {
 
     private Socket socket;
     private Database database;
 
+    /**
+     * Crea un nuovo thread di gestione associato a un client.
+     *
+     * @param socket   socket di comunicazione con il client
+     * @param database riferimento al livello di accesso ai dati (DB) usato per eseguire le operazioni richieste
+     */
     public ServerThread(Socket socket, Database database) {
         this.socket = socket;
         this.database = database;
     }
 
+    /**
+     * Ciclo principale di gestione del client.
+     * <p>
+     * Legge continuamente comandi e parametri inviati dal client, invoca i metodi del {@link Database}
+     * e invia una {@link ServerResponse} con l'esito dell'operazione e i dati richiesti (se presenti).
+     * </p>
+     *
+     * <p>
+     * Il metodo termina quando la connessione viene chiusa o si verifica un errore di I/O/serializzazione.
+     * </p>
+     */
     @Override
     public void run() {
         try (
                 ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-            ) {
+                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());) {
             while (true) {
 
                 String command = (String) in.readObject();
@@ -70,7 +111,8 @@ public class ServerThread implements Runnable {
                     }
 
                     case "updateUserInfo": {
-                        String currentUsername = (String) in.readObject(); // username attuale (chiave per trovare l'utente)
+                        String currentUsername = (String) in.readObject(); // username attuale (chiave per trovare
+                                                                           // l'utente)
                         String nome = (String) in.readObject();
                         String cognome = (String) in.readObject();
                         String dataNascita = (String) in.readObject();

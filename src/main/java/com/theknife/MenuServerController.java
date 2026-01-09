@@ -7,6 +7,15 @@ import java.net.Socket;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 
+/**
+ * Controller JavaFX della schermata di avvio del server.
+ * <p>
+ * Consente di inserire i parametri di connessione al database e avvia il server
+ * in ascolto sulla porta {@link #PORT}. Per ogni client connesso viene creato
+ * un thread dedicato ({@link ServerThread}) che gestisce la comunicazione e
+ * invoca le operazioni sul {@link Database}.
+ * </p>
+ */
 public class MenuServerController {
 
     Database database;
@@ -16,6 +25,15 @@ public class MenuServerController {
     @FXML
     TextField hostField, usernameField, passwordField;
 
+    /**
+     * Legge i parametri di connessione al database dai campi della GUI,
+     * inizializza l'istanza {@link Database} e avvia il loop del server in un
+     * thread daemon.
+     * <p>
+     * Il server ascolta sulla porta {@link #PORT} e, per ogni nuova connessione,
+     * crea un nuovo {@link ServerThread} dedicato al client.
+     * </p>
+     */
     public void invioDatiDB() {
         String hostDB = hostField.getText();
         String usernameDB = usernameField.getText();

@@ -9,12 +9,20 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 /**
- * JavaFX App
+ * Classe principale del server TheKnife.
+ * Avvia l'applicazione JavaFX e carica la schermata iniziale.
  */
 public class App extends Application {
 
     private static Scene scene;
 
+    /**
+     * Metodo di avvio dell'applicazione JavaFX.
+     * Inizializza la scena principale e mostra lo stage.
+     *
+     * @param stage stage principale dell'applicazione
+     * @throws IOException se il file FXML non viene caricato correttamente
+     */
     @Override
     public void start(Stage stage) throws IOException {
         System.out.println("Starting JavaFX app...");

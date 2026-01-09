@@ -2,6 +2,13 @@ package com.theknife;
 
 import java.io.Serializable;
 
+/**
+ * Modello dati che rappresenta un utente registrato nel sistema.
+ * <p>
+ * Contiene informazioni anagrafiche e credenziali (in forma hashata),
+ * oltre al ruolo (cliente o ristoratore).
+ * </p>
+ */
 public class Utente implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -13,7 +20,19 @@ public class Utente implements Serializable {
     private String password;
     private String ruolo;
 
-    public Utente(String nome, String cognome, String dataNascita, String domicilio, String username, String password, String ruolo) {
+    /**
+     * Crea un nuovo utente con i dati forniti.
+     *
+     * @param nome        nome dell'utente
+     * @param cognome     cognome dell'utente
+     * @param dataNascita data di nascita (formato testuale)
+     * @param domicilio   domicilio dell'utente
+     * @param username    username dell'utente
+     * @param password    hash della password
+     * @param ruolo       ruolo dell'utente (cliente/ristoratore)
+     */
+    public Utente(String nome, String cognome, String dataNascita, String domicilio, String username, String password,
+            String ruolo) {
         this.nome = nome;
         this.cognome = cognome;
         this.dataNascita = dataNascita;
@@ -53,6 +72,7 @@ public class Utente implements Serializable {
 
     @Override
     public String toString() {
-        return nome + ";" + cognome + ";" + dataNascita + ";" + domicilio + ";" + username + ";" + password + ";" + ruolo;
+        return nome + ";" + cognome + ";" + dataNascita + ";" + domicilio + ";" + username + ";" + password + ";"
+                + ruolo;
     }
 }

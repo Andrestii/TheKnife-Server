@@ -8,8 +8,24 @@ import java.net.Socket;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Client da linea di comando utilizzato per testare il server TheKnife.
+ * Permette di inviare manualmente comandi e parametri al server tramite socket
+ * e di visualizzare a schermo la {@link ServerResponse} ricevuta.
+ *
+ * <p>È uno strumento di supporto allo sviluppo/debug e non rappresenta
+ * il client grafico finale dell'applicazione.</p>
+ */
 public class ClientTest {
 
+    /**
+     * Avvia una sessione di test verso il server in ascolto su localhost:2345.
+     * Legge i comandi da input standard, invia i parametri richiesti e stampa
+     * la risposta del server (status + eventuale payload).
+     *
+     * @throws IOException se si verificano errori di comunicazione (socket/stream)
+     * @throws ClassNotFoundException se la risposta ricevuta non contiene classi deserializzabili
+     */
     void exec() throws IOException, ClassNotFoundException {
         InetAddress addr = InetAddress.getByName(null); // Localhost
         System.out.println("addr = " + addr);
